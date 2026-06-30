@@ -1862,9 +1862,19 @@ function renderDocList(filter='') {
   const render = (docs) => docs.length ? docs.map(d => docItemHTML(d)).join('') :
     '<div style="text-align:center;padding:60px;color:var(--gris);">Aucun document.</div>';
 
+  // More lenient filter - include docs even if type is slightly different
+  const isProforma = function(d) { return d.type === 'proforma'; };
+  const isRecu = function(d) { 
+    return d.type === 'recu' || d.type === 'reçu' || d.type === 'reçu' || 
+           (d.num && d.num.startsWith('REC')); 
+  };
+  // Fix type for recu docs that might have wrong value
+  all.forEach(function(d) {
+    if (isRecu(d) && d.type !== 'recu') d.type = 'recu';
+  });
   tous.innerHTML = render(all);
-  proformas.innerHTML = render(all.filter(d=>d.type==='proforma'));
-  recus.innerHTML = render(all.filter(d=>d.type==='recu'));
+  proformas.innerHTML = render(all.filter(isProforma));
+  recus.innerHTML = render(all.filter(isRecu));
 }
 
 function docItemHTML(doc) {
