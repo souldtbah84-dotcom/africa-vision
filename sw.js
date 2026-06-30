@@ -1,33 +1,24 @@
 // Service Worker - Africa Vision Multiservices
-var CACHE_NAME = 'africa-vision-v1';
-var urlsToCache = ['/'];
+// v2: network-first, never cache HTML (avoids stale data issues)
+var CACHE_NAME = 'africa-vision-v2';
 
 self.addEventListener('install', function(e) {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(urlsToCache);
-    })
-  );
-});
-
-self.addEventListener('fetch', function(e) {
-  e.respondWith(
-    caches.match(e.request).then(function(response) {
-      // Return cached version or fetch from network
-      return response || fetch(e.request).catch(function() {
-        return caches.match('/');
-      });
-    })
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(names) {
-      return Promise.all(
-        names.filter(function(name) { return name !== CACHE_NAME; })
-             .map(function(name) { return caches.delete(name); })
-      );
+      return Promise.all(names.map(function(name) { return caches.delete(name); }));
+    }).then(function() {
+      return self.clients.claim();
     })
   );
+});
+
+// Always fetch from network, never serve cached HTML/JS
+self.addEventListener('fetch', function(e) {
+  e.respondWith(fetch(e.request).catch(function() {
+    return new Response('Hors ligne', {status: 503});
+  }));
 });
