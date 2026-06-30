@@ -2766,7 +2766,7 @@ function fbSerial(data) {
 
 async function fbGetAll(col) {
   var url = FB_BASE + col + '?key=' + _avFbKey + '&pageSize=500';
-  var r = await fetchWithTimeout(url, {}, 8000);
+  var r = await fetchWithTimeout(url, {}, 15000);
   if (!r.ok) throw new Error(col + ' error ' + r.status);
   var j = await r.json();
   if (!j.documents) return [];
