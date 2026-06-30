@@ -1658,11 +1658,25 @@ function clearRecuForm() {
 }
 </script>
 <script>
-// Register Service Worker for PWA
+// Register Service Worker for PWA - with forced update + auto-reload once
 if ('serviceWorker' in navigator) {
+  var _avSwReloaded = sessionStorage.getItem('av_sw_reloaded_v2');
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (!_avSwReloaded) {
+      sessionStorage.setItem('av_sw_reloaded_v2', '1');
+      window.location.reload();
+    }
+  });
   window.addEventListener('load', function() {
+    // Clear any old caches left by the previous (buggy) service worker
+    if (window.caches) {
+      caches.keys().then(function(names) {
+        names.forEach(function(name) { caches.delete(name); });
+      });
+    }
     navigator.serviceWorker.register('/sw.js').then(function(reg) {
-      console.log('SW registered');
+      console.log('SW registered (v2 - network-first)');
+      reg.update();
     }).catch(function(err) {
       console.log('SW error:', err);
     });
@@ -1777,23 +1791,22 @@ function saveDoc(type) {
   }
 
   localStorage.setItem('av_docs',JSON.stringify(documents));
-  // Save the new doc directly to Firebase
-  // Always show confirmation
   showToast('✅ Document enregistré !');
-  // Save to Firebase
+  // Save the specific doc to Firebase
   if(window._avFbOn && typeof fbPut === 'function') {
-    var newDoc = documents[0]; // Most recent doc is first
-    if(newDoc && newDoc.num) {
-      var fbId = newDoc.num.replace(/[^a-zA-Z0-9]/g,'-');
-      newDoc._id = fbId;
-      fbPut('documents', fbId, newDoc).then(function(){
+    var docToSave = doc; // Use the doc variable from this scope
+    if(docToSave && docToSave.num) {
+      var fbId = docToSave.num.replace(/[^a-zA-Z0-9]/g,'-');
+      docToSave._id = fbId;
+      fbPut('documents', fbId, docToSave).then(function(){
         showToast('✅ Sauvegardé dans Firebase !');
+        renderDocList();
+        updateDashboard();
       }).catch(function(e){
         showToast('⚠️ Firebase: ' + e.message);
       });
     }
   } else if(!window._avFbOn) {
-    // Try to trigger Firebase load first
     if(typeof avFbLoadAll === 'function') avFbLoadAll(true);
   }
   updateDashboard();
@@ -1872,6 +1885,7 @@ function renderDocList(filter='') {
   all.forEach(function(d) {
     if (isRecu(d) && d.type !== 'recu') d.type = 'recu';
   });
+  console.log('Total docs to render:', all.length, all.map(function(d){return d.num;}));
   tous.innerHTML = render(all);
   proformas.innerHTML = render(all.filter(isProforma));
   recus.innerHTML = render(all.filter(isRecu));
@@ -2775,16 +2789,35 @@ function fbSerial(data) {
 }
 
 async function fbGetAll(col) {
-  var url = FB_BASE + col + '?key=' + _avFbKey + '&pageSize=500';
-  var r = await fetchWithTimeout(url, {}, 15000);
-  if (!r.ok) throw new Error(col + ' error ' + r.status);
-  var j = await r.json();
-  if (!j.documents) return [];
-  return j.documents.map(function(d) {
-    var o = fbParse(d.fields);
-    o._id = d.name.split('/').pop();
-    return o;
-  });
+  var allDocs = [];
+  var pageToken = null;
+  
+  // Loop to get ALL documents with pagination
+  do {
+    var url = FB_BASE + col + '?key=' + _avFbKey + '&pageSize=300';
+    if (pageToken) url += '&pageToken=' + pageToken;
+    var r = await fetchWithTimeout(url, {}, 15000);
+    if (!r.ok) throw new Error(col + ' error ' + r.status);
+    var j = await r.json();
+    pageToken = j.nextPageToken || null;
+    if (j.documents) {
+      var docs = j.documents.map(function(d) {
+        var o = fbParse(d.fields);
+        var pathId = d.name.split('/').pop();
+        o._id = pathId;
+        if (!o.num && pathId) o.num = pathId;
+        if (!o.type) {
+          if (pathId.startsWith('PRO')) o.type = 'proforma';
+          else if (pathId.startsWith('REC')) o.type = 'recu';
+        }
+        return o;
+      });
+      allDocs = allDocs.concat(docs);
+    }
+  } while (pageToken);
+  
+  console.log('fbGetAll ' + col + ': ' + allDocs.length + ' docs');
+  return allDocs;
 }
 
 async function fbPut(col, id, data) {
