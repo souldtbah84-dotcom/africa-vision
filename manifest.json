@@ -2,7 +2,7 @@
   "name": "Africa Vision Multiservices",
   "short_name": "Africa Vision",
   "description": "Plateforme de gestion commerciale - Africa Vision Multiservices",
-  "start_url": "/",
+  "start_url": "/africa-vision/",
   "display": "standalone",
   "background_color": "#0D0D0D",
   "theme_color": "#C8963E",
@@ -21,6 +21,10 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "finance"],
-  "lang": "fr"
+  "categories": [
+    "business",
+    "finance"
+  ],
+  "lang": "fr",
+  "scope": "/africa-vision/"
 }
