@@ -677,8 +677,8 @@
         <div class="form-grid">
           <div class="field">
             <label>📷 Photo du véhicule</label>
-            <div class="photo-upload-zone" onclick="document.getElementById('pf-photo-input').click()">
-              <input type="file" id="pf-photo-input" accept="image/*" capture="environment" style="display:none" onchange="loadPhoto(this,'pf')">
+            <label for="pf-photo-input" class="photo-upload-zone" style="cursor:pointer;display:block;">
+              <input type="file" id="pf-photo-input" accept="image/*" style="display:none" onchange="loadPhoto(this,'pf')">
               <div class="upload-icon">🖼️</div>
               <p>Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb;">JPG, PNG, WEBP — max 5 Mo</span></p>
               <img id="pf-photo-thumb" class="photo-preview-thumb" src="" alt="Aperçu">
@@ -854,8 +854,8 @@
         <div class="form-grid">
           <div class="field">
             <label>📷 Photo du véhicule</label>
-            <div class="photo-upload-zone" onclick="document.getElementById('rc-photo-input').click()">
-              <input type="file" id="rc-photo-input" accept="image/*" capture="environment" style="display:none" onchange="loadPhoto(this,'rc')">
+            <label for="rc-photo-input" class="photo-upload-zone" style="cursor:pointer;display:block;">
+              <input type="file" id="rc-photo-input" accept="image/*" style="display:none" onchange="loadPhoto(this,'rc')">
               <div class="upload-icon">🖼️</div>
               <p>Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb;">JPG, PNG, WEBP — max 5 Mo</span></p>
               <img id="rc-photo-thumb" class="photo-preview-thumb" src="" alt="Aperçu">
@@ -1043,9 +1043,8 @@
       <!-- Photo -->
       <div class="field">
         <label>📷 Photo du véhicule</label>
-        <div class="photo-upload-zone" id="vf-photo-zone" onclick="document.getElementById('vf-photo-input').click()">
-          <input type="file" id="vf-photo-input" accept="image/*" capture="environment" style="display:none" onchange="loadVfPhoto(this)">
-          <div class="upload-icon" id="vf-upload-icon">🖼️</div>
+        <div class="photo-uploalabel for="vf-photo-input" class="photo-upload-zone" id="vf-photo-zone" style="cursor:pointer;display:block;">
+          <input type="file" id="vf-photo-input" accept="image/*" style="display:none" onchange="loadVfPhoto(this)">on" id="vf-upload-icon">🖼️</div>
           <p id="vf-upload-txt">Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb">JPG, PNG — max 5 Mo</span></p>
           <img id="vf-photo-thumb" class="photo-preview-thumb" src="" alt="">
         </div>
