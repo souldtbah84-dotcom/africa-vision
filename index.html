@@ -678,7 +678,7 @@
           <div class="field">
             <label>📷 Photo du véhicule</label>
             <div class="photo-upload-zone" onclick="document.getElementById('pf-photo-input').click()">
-              <input type="file" id="pf-photo-input" accept="image/*" style="display:none" onchange="loadPhoto(this,'pf')">
+              <input type="file" id="pf-photo-input" accept="image/*" capture="environment" style="display:none" onchange="loadPhoto(this,'pf')">
               <div class="upload-icon">🖼️</div>
               <p>Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb;">JPG, PNG, WEBP — max 5 Mo</span></p>
               <img id="pf-photo-thumb" class="photo-preview-thumb" src="" alt="Aperçu">
@@ -855,7 +855,7 @@
           <div class="field">
             <label>📷 Photo du véhicule</label>
             <div class="photo-upload-zone" onclick="document.getElementById('rc-photo-input').click()">
-              <input type="file" id="rc-photo-input" accept="image/*" style="display:none" onchange="loadPhoto(this,'rc')">
+              <input type="file" id="rc-photo-input" accept="image/*" capture="environment" style="display:none" onchange="loadPhoto(this,'rc')">
               <div class="upload-icon">🖼️</div>
               <p>Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb;">JPG, PNG, WEBP — max 5 Mo</span></p>
               <img id="rc-photo-thumb" class="photo-preview-thumb" src="" alt="Aperçu">
@@ -1044,7 +1044,7 @@
       <div class="field">
         <label>📷 Photo du véhicule</label>
         <div class="photo-upload-zone" id="vf-photo-zone" onclick="document.getElementById('vf-photo-input').click()">
-          <input type="file" id="vf-photo-input" accept="image/*" style="display:none" onchange="loadVfPhoto(this)">
+          <input type="file" id="vf-photo-input" accept="image/*" capture="environment" style="display:none" onchange="loadVfPhoto(this)">
           <div class="upload-icon" id="vf-upload-icon">🖼️</div>
           <p id="vf-upload-txt">Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb">JPG, PNG — max 5 Mo</span></p>
           <img id="vf-photo-thumb" class="photo-preview-thumb" src="" alt="">
@@ -2636,19 +2636,55 @@ function emailClient(emailEncoded, nomEncoded) {
 function loadPhoto(input, prefix) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { showToast('⚠️ Photo trop lourde (max 5 Mo)'); return; }
+  
   const reader = new FileReader();
-  reader.onload = e => {
-    const data = e.target.result;
-    window[`_${prefix}Photo`] = data;
-    const thumb = document.getElementById(`${prefix}-photo-thumb`);
-    thumb.src = data;
-    thumb.classList.add('visible');
-    document.getElementById(`${prefix}-remove-photo`).classList.add('visible');
-    // hide the upload icon/text
-    const zone = thumb.closest('.photo-upload-zone');
-    zone.querySelector('.upload-icon').style.display = 'none';
-    zone.querySelector('p').style.display = 'none';
+  reader.onload = function(e) {
+    const originalData = e.target.result;
+    // Compress image for mobile - resize to max 800px and reduce quality
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const maxSize = 600; // Smaller for mobile
+      let w = img.width;
+      let h = img.height;
+      // Always resize for mobile
+      if (w > maxSize || h > maxSize) {
+        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+        else { w = Math.round(w * maxSize / h); h = maxSize; }
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      // Compress to JPEG 60% quality for mobile
+      const compressed = canvas.toDataURL('image/jpeg', 0.6);
+      
+      window['_' + prefix + 'Photo'] = compressed;
+      const thumb = document.getElementById(prefix + '-photo-thumb');
+      thumb.src = compressed;
+      thumb.classList.add('visible');
+      const removeBtn = document.getElementById(prefix + '-remove-photo');
+      if (removeBtn) removeBtn.classList.add('visible');
+      const zone = thumb.closest('.photo-upload-zone');
+      if (zone) {
+        const icon = zone.querySelector('.upload-icon');
+        const txt = zone.querySelector('p');
+        if (icon) icon.style.display = 'none';
+        if (txt) txt.style.display = 'none';
+      }
+      showToast('✅ Photo ajoutée !');
+    };
+    img.onerror = function() {
+      // Fallback: use original data if compression fails
+      window['_' + prefix + 'Photo'] = originalData;
+      const thumb = document.getElementById(prefix + '-photo-thumb');
+      thumb.src = originalData;
+      thumb.classList.add('visible');
+    };
+    img.src = originalData;
+  };
+  reader.onerror = function() {
+    showToast('❌ Erreur lecture photo');
   };
   reader.readAsDataURL(file);
 }
