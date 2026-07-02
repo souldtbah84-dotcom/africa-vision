@@ -524,10 +524,10 @@
         <div class="stat-value stat-vert" id="stat-recus">0</div>
         <div class="stat-sub">Paiements reçus</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="debugCA()" style="cursor:pointer" title="Cliquer pour voir le détail du calcul">
         <div class="stat-label">Chiffre d'affaires</div>
         <div class="stat-value stat-or" id="stat-ca">0 GNF</div>
-        <div class="stat-sub">Total encaissé</div>
+        <div class="stat-sub">Total encaissé — 🔍 cliquer pour le détail</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Voitures en stock</div>
@@ -2243,6 +2243,24 @@ function populateRecuForm(doc) {
 function filterDocs(val) { renderDocList(val); }
 
 // ══ DASHBOARD ══
+// Diagnostic : liste chaque reçu compté dans le chiffre d'affaires, pour
+// repérer un montant mal saisi ou un reçu en double / fantôme.
+function debugCA() {
+  var recus = documents.filter(function(d){ return d.type === 'recu'; });
+  var lignes = [];
+  var total = 0;
+  recus.forEach(function(d){
+    var montant = parseFloat((d.verse||'0').toString().replace(/[^\d.]/g,'')) || 0;
+    total += montant;
+    lignes.push((d.num || '(sans numéro)') + '  —  ' + fmt(montant) + ' GNF  —  ' + (d.client || '(sans client)'));
+  });
+  var message = 'DÉTAIL DU CHIFFRE D\'AFFAIRES\n';
+  message += recus.length + ' reçu(s) trouvé(s) dans la base :\n\n';
+  message += lignes.join('\n');
+  message += '\n\nTOTAL : ' + fmt(total) + ' GNF';
+  alert(message);
+}
+
 function updateDashboard() {
   let ca = 0;
   documents.filter(d=>d.type==='recu').forEach(d => {
