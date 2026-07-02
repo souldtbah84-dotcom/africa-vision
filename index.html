@@ -1667,14 +1667,6 @@ function clearProformaForm() {
   // Set correct number
   var numEl = document.getElementById('pf-num');
   if (numEl) numEl.value = nextDocNumber('proforma', 'PRO');
-  // Rafraîchit depuis Firebase en arrière-plan pour éviter les doublons
-  // entre plusieurs appareils, puis remet à jour le numéro si besoin
-  if (window._avFbOn && typeof avFbLoadAll === 'function') {
-    avFbLoadAll(true).then(function(){
-      var el = document.getElementById('pf-num');
-      if (el) el.value = nextDocNumber('proforma', 'PRO');
-    });
-  }
   // Reset save button
   var btn = document.querySelector('#page-proforma .btn-primary:last-child');
   if (btn) btn.textContent = '💾 Enregistrer & Émettre';
@@ -1715,14 +1707,6 @@ function clearRecuForm() {
   window._editingDocNum = null;
   var numEl = document.getElementById('rc-num');
   if (numEl) numEl.value = nextDocNumber('recu', 'REC');
-  // Rafraîchit depuis Firebase en arrière-plan pour éviter les doublons
-  // entre plusieurs appareils, puis remet à jour le numéro si besoin
-  if (window._avFbOn && typeof avFbLoadAll === 'function') {
-    avFbLoadAll(true).then(function(){
-      var el = document.getElementById('rc-num');
-      if (el) el.value = nextDocNumber('recu', 'REC');
-    });
-  }
   var btn = document.querySelector('#page-recu .btn-primary:last-child');
   if (btn) btn.textContent = '💾 Enregistrer & Émettre';
   calcTotals('rc');
@@ -1877,7 +1861,7 @@ async function saveDoc(type) {
     else document.getElementById('rc-num').value = nextDocNumber('recu', 'REC');
   }
 
-  localStorage.setItem('av_docs',JSON.stringify(documents));
+  try { localStorage.setItem('av_docs',JSON.stringify(documents)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
   showToast('✅ Document enregistré !');
   // Save the specific doc to Firebase
   if(window._avFbOn && typeof fbPut === 'function') {
@@ -2109,9 +2093,7 @@ async function deleteDoc(doc) {
     // Compute the Firebase ID same way it was saved
     const fbId = deletedDoc._id || (deletedDoc.num || 'doc').replace(/[^a-zA-Z0-9]/g, '-');
     documents.splice(idx, 1);
-    localStorage.setItem('av_docs', JSON.stringify(documents));
-    
-    // Delete from Firebase
+    try { localStorage.setItem('av_docs', JSON.stringify(documents)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
     if (window._avFbOn) {
       try {
         // Delete directly from Firebase
@@ -2512,7 +2494,7 @@ function saveVoiture() {
     voitures.push(data);
     showToast('✅ Véhicule ajouté !');
   }
-  localStorage.setItem('av_voitures',JSON.stringify(voitures));
+  try { localStorage.setItem('av_voitures',JSON.stringify(voitures)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
   closeVoitureForm();
   renderVoitures();
   // Save to Firebase in background
@@ -2522,7 +2504,8 @@ function saveVoiture() {
 function deleteVoiture(id) {
   if (!confirm('Supprimer ce véhicule du stock ?')) return;
   voitures = voitures.filter(v=>v.id!==id);
-  localStorage.setItem('av_voitures',JSON.stringify(voitures));if(window._avFbOn)window._avSaveVoit();
+  try { localStorage.setItem('av_voitures',JSON.stringify(voitures)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
+  if(window._avFbOn)window._avSaveVoit();
   closeVoitureDetail();
   renderVoitures();
   showToast('🗑 Véhicule supprimé');
@@ -2983,7 +2966,16 @@ async function avFbLoadAll(silent) {
     var rawVoit = await fbGetAll('voitures');
     // Firebase is the source of truth - always replace local
     documents = rawDocs;
-    localStorage.setItem('av_docs', JSON.stringify(documents));
+    // Sur certains navigateurs (Safari/iPhone notamment), le stockage local
+    // a une limite plus stricte et peut être saturé par les photos jointes
+    // aux documents. On isole cette écriture pour qu'un dépassement de
+    // quota n'interrompe plus la synchronisation Firebase, qui elle a bien
+    // réussi à ce stade.
+    try {
+      localStorage.setItem('av_docs', JSON.stringify(documents));
+    } catch (quotaErr) {
+      console.log('Stockage local plein (sans impact sur Firebase) :', quotaErr.message);
+    }
     if (rawVoit.length > 0) {
       rawVoit.forEach(function(v){
         if(v.prix) v.prix=Number(v.prix);
