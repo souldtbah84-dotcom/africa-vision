@@ -494,6 +494,16 @@
       <span class="icon">👥</span> Clients
     </button>
   </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Finances</div>
+    <button class="nav-btn" onclick="showPage('depenses')">
+      <span class="icon">💸</span> Dépenses GNF
+    </button>
+    <button class="nav-btn" onclick="showPage('depots')">
+      <span class="icon">💵</span> Dépôts USD
+    </button>
+  </div>
 </nav>
 
 <!-- MAIN CONTENT -->
@@ -567,6 +577,16 @@
             <div class="stat-sub">Livrées au client</div>
           </div>
         </div>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #ff9800">
+        <div class="stat-label">Dépense en GNF</div>
+        <div class="stat-value" id="stat-depense-gnf" style="color:#ff9800">0 GNF</div>
+        <div class="stat-sub">Total dépenses</div>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #4CAF50">
+        <div class="stat-label">Dépôt en Dollar</div>
+        <div class="stat-value" id="stat-depot-dollar" style="color:#4CAF50">0 USD</div>
+        <div class="stat-sub">Total dépôts</div>
       </div>
     </div>
 
@@ -685,6 +705,21 @@
                 <input type="number" id="pf-acompte" value="0" style="width:120px;border:1px solid #ddd;border-radius:6px;padding:4px 8px;text-align:right;font-size:13px" oninput="calcTotals('pf')">
               </div>
               <div class="total-row grand"><span>TOTAL NET</span><span id="pf-total">0 GNF</span></div>
+            </div>
+          </div>
+
+          <!-- DÉPENSES ET DÉPÔTS PROFORMA -->
+          <div style="margin-top:20px;background:#fff3e0;border:1.5px solid #ff9800;border-radius:10px;padding:16px 20px;">
+            <div style="font-size:12px;font-weight:700;color:#ff9800;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">💰 Dépenses & Dépôts</div>
+            <div class="form-grid-2">
+              <div class="field">
+                <label>Dépense en GNF</label>
+                <input type="number" id="pf-depense-gnf" value="0" placeholder="0" style="font-size:15px;font-weight:700;border-color:#ff9800">
+              </div>
+              <div class="field">
+                <label>Dépôt en Dollar</label>
+                <input type="number" id="pf-depot-dollar" value="0" placeholder="0" style="font-size:15px;font-weight:700;border-color:#ff9800">
+              </div>
             </div>
           </div>
         </div>
@@ -864,6 +899,21 @@
               </div>
             </div>
           </div>
+
+          <!-- DÉPENSES ET DÉPÔTS -->
+          <div style="margin-top:20px;background:#fff3e0;border:1.5px solid #ff9800;border-radius:10px;padding:16px 20px;">
+            <div style="font-size:12px;font-weight:700;color:#ff9800;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">💰 Dépenses & Dépôts</div>
+            <div class="form-grid-2">
+              <div class="field">
+                <label>Dépense en GNF</label>
+                <input type="number" id="rc-depense-gnf" value="0" placeholder="0" oninput="calcPaiement()" style="font-size:15px;font-weight:700;border-color:#ff9800">
+              </div>
+              <div class="field">
+                <label>Dépôt en Dollar</label>
+                <input type="number" id="rc-depot-dollar" value="0" placeholder="0" oninput="calcPaiement()" style="font-size:15px;font-weight:700;border-color:#ff9800">
+              </div>
+            </div>
+          </div>
         </div>
 
         <hr class="separator">
@@ -1027,6 +1077,78 @@
     </div>
     <div id="clients-list" class="doc-list">
       <div style="text-align:center;padding:60px;color:var(--gris);">Aucun client enregistré.</div>
+    </div>
+  </div>
+
+  <!-- PAGE DÉPENSES EN GNF -->
+  <div class="page" id="page-depenses">
+    <div class="form-card">
+      <div class="form-header"><h2>➕ Nouvelle Dépense en GNF</h2></div>
+      <div style="padding:20px 28px;">
+        <div class="form-grid-3">
+          <div class="field">
+            <label>Date</label>
+            <input type="date" id="dep-date" style="border-color:var(--or)">
+          </div>
+          <div class="field">
+            <label>Montant (GNF)</label>
+            <input type="number" id="dep-montant" placeholder="0" style="border-color:var(--or);font-weight:700;font-size:15px">
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <input type="text" id="dep-desc" placeholder="Ex: Carburant, maintenance..." style="border-color:var(--or)">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveDépense()" style="margin-top:12px;background:var(--or)">💾 Enregistrer Dépense</button>
+      </div>
+    </div>
+
+    <div class="form-card" style="margin-top:24px;">
+      <div class="form-header"><h2>📋 Historique des Dépenses</h2></div>
+      <div style="padding:20px 28px;">
+        <div style="background:#fff3e0;border:1px solid #ff9800;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-weight:700;color:#ff9800;">
+          💰 Total Dépenses : <span id="total-depenses">0 GNF</span>
+        </div>
+        <div id="depenses-list" class="doc-list">
+          <div style="text-align:center;padding:40px;color:var(--gris);">Aucune dépense enregistrée.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE DÉPÔTS EN DOLLAR -->
+  <div class="page" id="page-depots">
+    <div class="form-card">
+      <div class="form-header"><h2>➕ Nouveau Dépôt en Dollar</h2></div>
+      <div style="padding:20px 28px;">
+        <div class="form-grid-3">
+          <div class="field">
+            <label>Date</label>
+            <input type="date" id="dpo-date" style="border-color:#4CAF50">
+          </div>
+          <div class="field">
+            <label>Montant (USD)</label>
+            <input type="number" id="dpo-montant" placeholder="0" style="border-color:#4CAF50;font-weight:700;font-size:15px">
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <input type="text" id="dpo-desc" placeholder="Ex: Transfert client, commission..." style="border-color:#4CAF50">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveDépôt()" style="margin-top:12px;background:#4CAF50">💾 Enregistrer Dépôt</button>
+      </div>
+    </div>
+
+    <div class="form-card" style="margin-top:24px;">
+      <div class="form-header"><h2>📋 Historique des Dépôts</h2></div>
+      <div style="padding:20px 28px;">
+        <div style="background:#e8f5e9;border:1px solid #4CAF50;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-weight:700;color:#4CAF50;">
+          💵 Total Dépôts : <span id="total-depots">0 USD</span>
+        </div>
+        <div id="depots-list" class="doc-list">
+          <div style="text-align:center;padding:40px;color:var(--gris);">Aucun dépôt enregistré.</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1292,7 +1414,9 @@ const pageTitles = {
   recu: 'Nouveau Reçu de Paiement',
   liste: 'Tous les documents',
   voitures: 'Stock de véhicules',
-  clients: 'Base clients'
+  clients: 'Base clients',
+  depenses: 'Dépenses en GNF',
+  depots: 'Dépôts en Dollar'
 };
 
 function showPage(p) {
@@ -1312,6 +1436,8 @@ function showPage(p) {
   if (p === 'clients') renderClients();
   if (p === 'voitures') renderVoitures();
   if (p === 'dashboard') updateDashboard();
+  if (p === 'depenses') renderDépenses();
+  if (p === 'depots') renderDépôts();
 
   // Correctif affichage : le contenu de certaines pages restait invisible
   // tant que rien ne forçait le navigateur à repeindre l'écran (c'est pour
@@ -1449,6 +1575,8 @@ function collectProforma() {
     kmEtat: document.getElementById('pf-km-etat').value,
     kmType: document.getElementById('pf-km-type').value,
     photo: window._pfPhoto || null,
+    depenseGNF: parseFloat(document.getElementById('pf-depense-gnf')?.value || 0),
+    depotDollar: parseFloat(document.getElementById('pf-depot-dollar')?.value || 0),
     createdAt: new Date().toISOString()
   };
 }
@@ -1491,6 +1619,8 @@ function collectRecu() {
     kmEtat: document.getElementById('rc-km-etat').value,
     kmType: document.getElementById('rc-km-type').value,
     photo: window._rcPhoto || null,
+    depenseGNF: parseFloat(document.getElementById('rc-depense-gnf')?.value || 0),
+    depotDollar: parseFloat(document.getElementById('rc-depot-dollar')?.value || 0),
     createdAt: new Date().toISOString()
   };
 }
@@ -2262,6 +2392,20 @@ function updateDashboard() {
   document.getElementById('stat-en-cours').textContent = enCours;
   document.getElementById('stat-en-transit').textContent = enTransit;
   document.getElementById('stat-arrive').textContent = arrive;
+
+  // Dépenses et Dépôts
+  let totalDepenseGNF = 0;
+  let totalDepotDollar = 0;
+  depenses.forEach(d => {
+    totalDepenseGNF += parseFloat(d.montant || 0);
+  });
+  depots.forEach(d => {
+    totalDepotDollar += parseFloat(d.montant || 0);
+  });
+  const depenseEl = document.getElementById('stat-depense-gnf');
+  if (depenseEl) depenseEl.textContent = fmt(totalDepenseGNF) + ' GNF';
+  const depotEl = document.getElementById('stat-depot-dollar');
+  if (depotEl) depotEl.textContent = fmt(totalDepotDollar) + ' USD';
 
   const db = document.getElementById('dashboard-docs');
   db.innerHTML = documents.length ? documents.slice(0,5).map(d=>docItemHTML(d)).join('') :
@@ -3161,6 +3305,167 @@ function closeSidebar() {
     sidebar.classList.remove('open');
     overlay.style.display = 'none';
   }
+}
+
+// ══ DÉPENSES ET DÉPÔTS ══
+let depenses = JSON.parse(localStorage.getItem('av_depenses') || '[]');
+let depots = JSON.parse(localStorage.getItem('av_depots') || '[]');
+
+function saveDépense() {
+  const date = document.getElementById('dep-date')?.value;
+  const montant = parseFloat(document.getElementById('dep-montant')?.value || 0);
+  const desc = document.getElementById('dep-desc')?.value;
+  
+  if (!date || montant <= 0 || !desc) {
+    showToast('⚠️ Remplissez tous les champs');
+    return;
+  }
+  
+  const dep = {
+    id: Date.now(),
+    date,
+    montant,
+    desc,
+    createdAt: new Date().toISOString()
+  };
+  
+  depenses.unshift(dep);
+  try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) { console.log('Storage error:', e); }
+  
+  // Sauvegarde aussi sur Firebase
+  if (window._avFbOn && typeof fbPut === 'function') {
+    fbPut('depenses', 'dep-' + dep.id, dep).catch(e => console.log('Firebase error:', e));
+  }
+  
+  document.getElementById('dep-date').value = '';
+  document.getElementById('dep-montant').value = '';
+  document.getElementById('dep-desc').value = '';
+  
+  renderDépenses();
+  updateDashboard();
+  showToast('✅ Dépense enregistrée !');
+}
+
+function saveDépôt() {
+  const date = document.getElementById('dpo-date')?.value;
+  const montant = parseFloat(document.getElementById('dpo-montant')?.value || 0);
+  const desc = document.getElementById('dpo-desc')?.value;
+  
+  if (!date || montant <= 0 || !desc) {
+    showToast('⚠️ Remplissez tous les champs');
+    return;
+  }
+  
+  const dpo = {
+    id: Date.now(),
+    date,
+    montant,
+    desc,
+    createdAt: new Date().toISOString()
+  };
+  
+  depots.unshift(dpo);
+  try { localStorage.setItem('av_depots', JSON.stringify(depots)); } catch(e) { console.log('Storage error:', e); }
+  
+  // Sauvegarde aussi sur Firebase
+  if (window._avFbOn && typeof fbPut === 'function') {
+    fbPut('depots', 'dpo-' + dpo.id, dpo).catch(e => console.log('Firebase error:', e));
+  }
+  
+  document.getElementById('dpo-date').value = '';
+  document.getElementById('dpo-montant').value = '';
+  document.getElementById('dpo-desc').value = '';
+  
+  renderDépôts();
+  updateDashboard();
+  showToast('✅ Dépôt enregistré !');
+}
+
+function renderDépenses() {
+  const list = document.getElementById('depenses-list');
+  if (!list) return;
+  
+  let totalDep = 0;
+  depenses.forEach(d => { totalDep += parseFloat(d.montant || 0); });
+  
+  const totalEl = document.getElementById('total-depenses');
+  if (totalEl) totalEl.textContent = fmt(totalDep) + ' GNF';
+  
+  if (depenses.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gris);">Aucune dépense enregistrée.</div>';
+    return;
+  }
+  
+  list.innerHTML = depenses.map(d => `
+    <div style="background:#fff;border:1px solid #ffe0b2;border-radius:8px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-weight:700;color:#ff9800;">${d.date} — ${d.desc}</div>
+        <div style="font-size:12px;color:var(--gris);">${fmt(d.montant)} GNF</div>
+      </div>
+      <button class="btn btn-sm" style="background:#ffcccc;color:#c0392b" onclick="deleteDépense(${d.id})">🗑 Supprimer</button>
+    </div>
+  `).join('');
+}
+
+function renderDépôts() {
+  const list = document.getElementById('depots-list');
+  if (!list) return;
+  
+  let totalDpo = 0;
+  depots.forEach(d => { totalDpo += parseFloat(d.montant || 0); });
+  
+  const totalEl = document.getElementById('total-depots');
+  if (totalEl) totalEl.textContent = fmt(totalDpo) + ' USD';
+  
+  if (depots.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gris);">Aucun dépôt enregistré.</div>';
+    return;
+  }
+  
+  list.innerHTML = depots.map(d => `
+    <div style="background:#fff;border:1px solid #c8e6c9;border-radius:8px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-weight:700;color:#4CAF50;">${d.date} — ${d.desc}</div>
+        <div style="font-size:12px;color:var(--gris);">${fmt(d.montant)} USD</div>
+      </div>
+      <button class="btn btn-sm" style="background:#ffcccc;color:#c0392b" onclick="deleteDépôt(${d.id})">🗑 Supprimer</button>
+    </div>
+  `).join('');
+}
+
+function deleteDépense(id) {
+  if (!confirm('Supprimer cette dépense ?')) return;
+  depenses = depenses.filter(d => d.id !== id);
+  try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) { console.log('Storage error:', e); }
+  if (window._avFbOn && typeof fbDel === 'function') {
+    fbDel('depenses', 'dep-' + id).catch(e => console.log('Firebase error:', e));
+  }
+  renderDépenses();
+  updateDashboard();
+  showToast('🗑 Dépense supprimée');
+}
+
+function deleteDépôt(id) {
+  if (!confirm('Supprimer ce dépôt ?')) return;
+  depots = depots.filter(d => d.id !== id);
+  try { localStorage.setItem('av_depots', JSON.stringify(depots)); } catch(e) { console.log('Storage error:', e); }
+  if (window._avFbOn && typeof fbDel === 'function') {
+    fbDel('depots', 'dpo-' + id).catch(e => console.log('Firebase error:', e));
+  }
+  renderDépôts();
+  updateDashboard();
+  showToast('🗑 Dépôt supprimé');
+}
+
+// Charger les dépenses et dépôts depuis Firebase au démarrage
+async function loadDépensesEtDépôts() {
+  if (!window._avFbOn || !typeof fbGetAll === 'function') return;
+  try {
+    depenses = await fbGetAll('depenses') || [];
+    depots = await fbGetAll('depots') || [];
+    try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) {}
+    try { localStorage.setItem('av_depots', JSON.stringify(depots)); } catch(e) {}
+  } catch(e) { console.log('Firebase load error:', e); }
 }
 
 // Hamburger visible on ALL screen sizes
