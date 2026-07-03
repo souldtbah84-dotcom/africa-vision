@@ -504,6 +504,13 @@
       <span class="icon">💵</span> Dépôts USD
     </button>
   </div>
+
+  <!-- FIREBASE & CACHE BUTTONS -->
+  <div style="padding:12px 16px;border-top:1px solid #222;margin-top:auto;">
+    <button id="av-fb-btn" style="width:100%;padding:11px;background:#1E7E5A;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;font-family:Inter,sans-serif;margin-bottom:6px;display:block;">✅ Firebase OK</button>
+    <button onclick="avFbLoadAll(false)" style="width:100%;padding:8px;background:none;border:1px solid #333;color:#666;border-radius:8px;cursor:pointer;font-size:12px;font-family:Inter,sans-serif;margin-bottom:4px;">🔄 Synchroniser</button>
+    <button onclick="viderCacheLocal()" style="width:100%;padding:8px;background:none;border:1px solid #c00;color:#c00;border-radius:8px;cursor:pointer;font-size:11px;font-family:Inter,sans-serif;">🗑 Vider cache local</button>
+  </div>
 </nav>
 
 <!-- MAIN CONTENT -->
@@ -3179,6 +3186,21 @@ function avLogin() {
   } else {
     document.getElementById('avlerr').style.display='block';
     document.getElementById('avlp').value='';
+  }
+}
+
+function viderCacheLocal() {
+  if (!confirm('Effacer toutes les données locales et recharger depuis Firebase ?')) return;
+  try { localStorage.removeItem('av_docs'); } catch(e) {}
+  try { localStorage.removeItem('av_voitures'); } catch(e) {}
+  try { localStorage.removeItem('av_depenses'); } catch(e) {}
+  try { localStorage.removeItem('av_depots'); } catch(e) {}
+  documents = [];
+  voitures = [];
+  depenses = [];
+  depots = [];
+  if (window._avFbOn && typeof avFbLoadAll === 'function') {
+    avFbLoadAll(false);
   }
 }
 
