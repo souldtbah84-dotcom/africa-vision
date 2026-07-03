@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Africa Vision">
-<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Africa Vision Multiservices – Gestion Factures & Reçus</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
@@ -3311,8 +3311,6 @@ function returnToMenu() {
   closeSidebar();
 }
 
-}
-
 // ══ DÉPENSES ET DÉPÔTS ══
 var depenses = JSON.parse(localStorage.getItem('av_depenses') || '[]');
 var depots = JSON.parse(localStorage.getItem('av_depots') || '[]');
@@ -3481,7 +3479,7 @@ async function deleteDépôt(id) {
 
 // Charger les dépenses et dépôts depuis Firebase au démarrage
 async function loadDépensesEtDépôts() {
-  if (!window._avFbOn || !typeof fbGetAll === 'function') return;
+  if (!window._avFbOn || typeof fbGetAll !== 'function') return;
   try {
     depenses = await fbGetAll('depenses') || [];
     depots = await fbGetAll('depots') || [];
