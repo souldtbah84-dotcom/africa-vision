@@ -494,23 +494,6 @@
       <span class="icon">👥</span> Clients
     </button>
   </div>
-
-  <div class="nav-section">
-    <div class="nav-label">Finances</div>
-    <button class="nav-btn" onclick="showPage('depenses')">
-      <span class="icon">💸</span> Dépenses GNF
-    </button>
-    <button class="nav-btn" onclick="showPage('depots')">
-      <span class="icon">💵</span> Dépôts USD
-    </button>
-  </div>
-
-  <!-- FIREBASE & CACHE BUTTONS -->
-  <div style="padding:12px 16px;border-top:1px solid #222;margin-top:auto;">
-    <button id="av-fb-btn" style="width:100%;padding:11px;background:#1E7E5A;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;font-family:Inter,sans-serif;margin-bottom:6px;display:block;">✅ Firebase OK</button>
-    <button onclick="avFbLoadAll(false)" style="width:100%;padding:8px;background:none;border:1px solid #333;color:#666;border-radius:8px;cursor:pointer;font-size:12px;font-family:Inter,sans-serif;margin-bottom:4px;">🔄 Synchroniser</button>
-    <button onclick="viderCacheLocal()" style="width:100%;padding:8px;background:none;border:1px solid #c00;color:#c00;border-radius:8px;cursor:pointer;font-size:11px;font-family:Inter,sans-serif;">🗑 Vider cache local</button>
-  </div>
 </nav>
 
 <!-- MAIN CONTENT -->
@@ -520,7 +503,6 @@
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:12px;">
       <button id="menu-toggle" onclick="toggleSidebar()" style="display:none;background:none;border:none;cursor:pointer;font-size:22px;padding:4px;">☰</button>
-      <button id="return-btn" onclick="returnToMenu()" style="background:none;border:none;cursor:pointer;font-size:22px;padding:4px;color:var(--or);font-weight:700;display:none;">← Retour</button>
       <h1 id="page-title">Tableau de bord</h1>
     </div>
     <div class="topbar-actions">
@@ -542,10 +524,10 @@
         <div class="stat-value stat-vert" id="stat-recus">0</div>
         <div class="stat-sub">Paiements reçus</div>
       </div>
-      <div class="stat-card" onclick="debugCA()" style="cursor:pointer" title="Cliquer pour voir le détail du calcul">
+      <div class="stat-card">
         <div class="stat-label">Chiffre d'affaires</div>
         <div class="stat-value stat-or" id="stat-ca">0 GNF</div>
-        <div class="stat-sub">Total encaissé — 🔍 cliquer pour le détail</div>
+        <div class="stat-sub">Total encaissé</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Voitures en stock</div>
@@ -585,16 +567,6 @@
             <div class="stat-sub">Livrées au client</div>
           </div>
         </div>
-      </div>
-      <div class="stat-card" style="border-left:4px solid #ff9800">
-        <div class="stat-label">Dépense en GNF</div>
-        <div class="stat-value" id="stat-depense-gnf" style="color:#ff9800">0 GNF</div>
-        <div class="stat-sub">Total dépenses</div>
-      </div>
-      <div class="stat-card" style="border-left:4px solid #4CAF50">
-        <div class="stat-label">Dépôt en Dollar</div>
-        <div class="stat-value" id="stat-depot-dollar" style="color:#4CAF50">0 USD</div>
-        <div class="stat-sub">Total dépôts</div>
       </div>
     </div>
 
@@ -1058,78 +1030,6 @@
     </div>
   </div>
 
-  <!-- PAGE DÉPENSES EN GNF -->
-  <div class="page" id="page-depenses">
-    <div class="form-card">
-      <div class="form-header"><h2>➕ Nouvelle Dépense en GNF</h2></div>
-      <div style="padding:20px 28px;">
-        <div class="form-grid-3">
-          <div class="field">
-            <label>Date</label>
-            <input type="date" id="dep-date" style="border-color:var(--or)">
-          </div>
-          <div class="field">
-            <label>Montant (GNF)</label>
-            <input type="number" id="dep-montant" placeholder="0" style="border-color:var(--or);font-weight:700;font-size:15px">
-          </div>
-          <div class="field">
-            <label>Description</label>
-            <input type="text" id="dep-desc" placeholder="Ex: Carburant, maintenance..." style="border-color:var(--or)">
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="saveDépense()" style="margin-top:12px;background:var(--or)">💾 Enregistrer Dépense</button>
-      </div>
-    </div>
-
-    <div class="form-card" style="margin-top:24px;">
-      <div class="form-header"><h2>📋 Historique des Dépenses</h2></div>
-      <div style="padding:20px 28px;">
-        <div style="background:#fff3e0;border:1px solid #ff9800;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-weight:700;color:#ff9800;">
-          💰 Total Dépenses : <span id="total-depenses">0 GNF</span>
-        </div>
-        <div id="depenses-list" class="doc-list">
-          <div style="text-align:center;padding:40px;color:var(--gris);">Aucune dépense enregistrée.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PAGE DÉPÔTS EN DOLLAR -->
-  <div class="page" id="page-depots">
-    <div class="form-card">
-      <div class="form-header"><h2>➕ Nouveau Dépôt en Dollar</h2></div>
-      <div style="padding:20px 28px;">
-        <div class="form-grid-3">
-          <div class="field">
-            <label>Date</label>
-            <input type="date" id="dpo-date" style="border-color:#4CAF50">
-          </div>
-          <div class="field">
-            <label>Montant (USD)</label>
-            <input type="number" id="dpo-montant" placeholder="0" style="border-color:#4CAF50;font-weight:700;font-size:15px">
-          </div>
-          <div class="field">
-            <label>Description</label>
-            <input type="text" id="dpo-desc" placeholder="Ex: Transfert client, commission..." style="border-color:#4CAF50">
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="saveDépôt()" style="margin-top:12px;background:#4CAF50">💾 Enregistrer Dépôt</button>
-      </div>
-    </div>
-
-    <div class="form-card" style="margin-top:24px;">
-      <div class="form-header"><h2>📋 Historique des Dépôts</h2></div>
-      <div style="padding:20px 28px;">
-        <div style="background:#e8f5e9;border:1px solid #4CAF50;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-weight:700;color:#4CAF50;">
-          💵 Total Dépôts : <span id="total-depots">0 USD</span>
-        </div>
-        <div id="depots-list" class="doc-list">
-          <div style="text-align:center;padding:40px;color:var(--gris);">Aucun dépôt enregistré.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </div><!-- /main -->
 
 <!-- ══════════ MODAL FICHE VÉHICULE ══════════ -->
@@ -1159,12 +1059,11 @@
       <!-- Photo -->
       <div class="field">
         <label>📷 Photo du véhicule</label>
-        <label for="vf-photo-input" class="photo-upload-zone" id="vf-photo-zone" style="cursor:pointer;display:block;">
-          <input type="file" id="vf-photo-input" accept="image/*" style="display:none" onchange="loadVfPhoto(this)">
-          <div id="vf-upload-icon">🖼️</div>
+        <div class="photo-uploalabel for="vf-photo-input" class="photo-upload-zone" id="vf-photo-zone" style="cursor:pointer;display:block;">
+          <input type="file" id="vf-photo-input" accept="image/*" style="display:none" onchange="loadVfPhoto(this)">on" id="vf-upload-icon">🖼️</div>
           <p id="vf-upload-txt">Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb">JPG, PNG — max 5 Mo</span></p>
           <img id="vf-photo-thumb" class="photo-preview-thumb" src="" alt="">
-        </label>
+        </div>
         <button class="remove-photo" id="vf-remove-photo" onclick="removeVfPhoto()">✕ Supprimer</button>
       </div>
 
@@ -1340,8 +1239,8 @@
 </div>
 <script>
 // ══ DATA STORE ══
-var documents = JSON.parse(localStorage.getItem('av_docs') || '[]');
-var voitures = JSON.parse(localStorage.getItem('av_voitures') || JSON.stringify([
+let documents = JSON.parse(localStorage.getItem('av_docs') || '[]');
+let voitures = JSON.parse(localStorage.getItem('av_voitures') || JSON.stringify([
   { id:1, nom:"Toyota Corolla", annee:"2024", couleur:"Blanc", prix:350000000, stock:2, carburant:"Essence", boite:"Automatique", portes:"4 portes", origine:"Japon", statut:"disponible", type:"Neuf", km:"0 km", desc:"Climatisation, GPS, vitres électriques, régulateur de vitesse", photo:null },
   { id:2, nom:"Honda CR-V", annee:"2023", couleur:"Gris", prix:480000000, stock:1, carburant:"Essence", boite:"Automatique", portes:"5 portes", origine:"Japon", statut:"disponible", type:"Neuf", km:"0 km", desc:"Toit ouvrant, caméra de recul, sièges en cuir, 7 places", photo:null },
   { id:3, nom:"Toyota Hilux", annee:"2024", couleur:"Noir", prix:650000000, stock:3, carburant:"Diesel", boite:"Manuelle", portes:"4 portes", origine:"Japon", statut:"disponible", type:"Neuf", km:"0 km", desc:"4x4, benne, climatisation, idéal pour tous terrains", photo:null },
@@ -1349,24 +1248,8 @@ var voitures = JSON.parse(localStorage.getItem('av_voitures') || JSON.stringify(
   { id:5, nom:"Nissan Patrol", annee:"2022", couleur:"Beige", prix:890000000, stock:2, carburant:"Diesel", boite:"Automatique", portes:"5 portes", origine:"Japon", statut:"disponible", type:"Occasion", km:"28 000 km", desc:"V8, 8 places, cuir, écran tactile, traction intégrale", photo:null },
   { id:6, nom:"Mercedes GLE", annee:"2024", couleur:"Noir", prix:1200000000, stock:1, carburant:"Diesel", boite:"Automatique", portes:"5 portes", origine:"Allemagne", statut:"transit", type:"Neuf", km:"0 km", desc:"Luxe absolu, toit panoramique, massage sièges, Burmester audio", photo:null },
 ]));
-var currentDocType = '';
-var currentDoc = null;
-
-// ══ NUMÉROTATION FIABLE ══
-// Calcule le prochain numéro en se basant sur le PLUS GRAND numéro existant
-// (et non sur le nombre de documents), pour éviter la réutilisation d'un
-// numéro déjà utilisé si un document a été supprimé.
-function nextDocNumber(type, prefix) {
-  var maxNum = 0;
-  documents.filter(function(d){ return d.type === type; }).forEach(function(d){
-    var m = /(\d+)\s*$/.exec(d.num || '');
-    if (m) {
-      var n = parseInt(m[1], 10);
-      if (n > maxNum) maxNum = n;
-    }
-  });
-  return prefix + '-2026-' + String(maxNum + 1).padStart(3, '0');
-}
+let currentDocType = '';
+let currentDoc = null;
 
 // ══ INIT ══
 window.onload = () => {
@@ -1379,8 +1262,10 @@ window.onload = () => {
   document.getElementById('rc-date').value = today;
 
   // Auto-numérotation
-  document.getElementById('pf-num').value = nextDocNumber('proforma', 'PRO');
-  document.getElementById('rc-num').value = nextDocNumber('recu', 'REC');
+  const pfCount = documents.filter(d=>d.type==='proforma').length + 1;
+  const rcCount = documents.filter(d=>d.type==='recu').length + 1;
+  document.getElementById('pf-num').value = `PRO-2026-${String(pfCount).padStart(3,'0')}`;
+  document.getElementById('rc-num').value = `REC-2026-${String(rcCount).padStart(3,'0')}`;
 
   renderVoitures();
   updateDashboard();
@@ -1393,9 +1278,7 @@ const pageTitles = {
   recu: 'Nouveau Reçu de Paiement',
   liste: 'Tous les documents',
   voitures: 'Stock de véhicules',
-  clients: 'Base clients',
-  depenses: 'Dépenses en GNF',
-  depots: 'Dépôts en Dollar'
+  clients: 'Base clients'
 };
 
 function showPage(p) {
@@ -1410,24 +1293,10 @@ function showPage(p) {
   document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   document.getElementById('page-title').textContent = pageTitles[p] || p;
-  
-  // Afficher le bouton retour sauf sur le tableau de bord
-  var returnBtn = document.getElementById('return-btn');
-  if (returnBtn) returnBtn.style.display = (p === 'dashboard') ? 'none' : 'block';
-  
   event.currentTarget && event.currentTarget.classList.add('active');
   if (p === 'liste') renderDocList();
   if (p === 'clients') renderClients();
-  if (p === 'voitures') renderVoitures();
   if (p === 'dashboard') updateDashboard();
-  if (p === 'depenses') renderDépenses();
-  if (p === 'depots') renderDépôts();
-
-  // Force un repaint léger pour éviter l'espace vide
-  var pageEl = document.getElementById('page-'+p);
-  if (pageEl) {
-    void pageEl.offsetHeight;
-  }
 }
 
 function showTab(id, el) {
@@ -1761,8 +1630,9 @@ function clearProformaForm() {
   window._editingDocType = null;
   window._editingDocNum = null;
   // Set correct number
+  var count = documents.filter(function(d){ return d.type==='proforma'; }).length + 1;
   var numEl = document.getElementById('pf-num');
-  if (numEl) numEl.value = nextDocNumber('proforma', 'PRO');
+  if (numEl) numEl.value = 'PRO-2026-' + String(count).padStart(3,'0');
   // Reset save button
   var btn = document.querySelector('#page-proforma .btn-primary:last-child');
   if (btn) btn.textContent = '💾 Enregistrer & Émettre';
@@ -1801,8 +1671,9 @@ function clearRecuForm() {
   if (removeBtn) removeBtn.classList.remove('visible');
   window._editingDocType = null;
   window._editingDocNum = null;
+  var count = documents.filter(function(d){ return d.type==='recu'; }).length + 1;
   var numEl = document.getElementById('rc-num');
-  if (numEl) numEl.value = nextDocNumber('recu', 'REC');
+  if (numEl) numEl.value = 'REC-2026-' + String(count).padStart(3,'0');
   var btn = document.querySelector('#page-recu .btn-primary:last-child');
   if (btn) btn.textContent = '💾 Enregistrer & Émettre';
   calcTotals('rc');
@@ -1913,26 +1784,9 @@ Africa Vision Multiservices`;
 
 
 // ══ SAUVEGARDE ══
-async function saveDoc(type) {
-  const willCreateNew = !(window._editingDocType === type && window._editingDocNum);
-
-  // Avant de créer un NOUVEAU document, on se resynchronise avec Firebase
-  // pour calculer un numéro garanti unique. Sans ça, deux appareils qui
-  // créent un reçu presque en même temps peuvent recevoir le même numéro,
-  // et le second écrase silencieusement le premier dans Firebase.
-  if (willCreateNew && window._avFbOn && typeof avFbLoadAll === 'function') {
-    try { await avFbLoadAll(true); } catch(e) {}
-  }
-
+function saveDoc(type) {
   const doc = type === 'proforma' ? collectProforma() : collectRecu();
   if (!doc.client) { showToast('⚠️ Veuillez saisir le nom du client'); return; }
-
-  if (willCreateNew) {
-    const freshNum = nextDocNumber(type, type === 'proforma' ? 'PRO' : 'REC');
-    doc.num = freshNum;
-    const numInput = document.getElementById(type === 'proforma' ? 'pf-num' : 'rc-num');
-    if (numInput) numInput.value = freshNum;
-  }
 
   const isEditing = window._editingDocType === type && window._editingDocNum;
   if (isEditing) {
@@ -1953,11 +1807,12 @@ async function saveDoc(type) {
     documents.unshift(doc);
     showToast(`✅ ${type === 'proforma' ? 'Proforma' : 'Reçu'} ${doc.num} enregistré !`);
     // Incrémenter numéro seulement pour nouveau doc
-    if (type === 'proforma') document.getElementById('pf-num').value = nextDocNumber('proforma', 'PRO');
-    else document.getElementById('rc-num').value = nextDocNumber('recu', 'REC');
+    const count = documents.filter(d=>d.type===type).length + 1;
+    if (type === 'proforma') document.getElementById('pf-num').value = `PRO-2026-${String(count).padStart(3,'0')}`;
+    else document.getElementById('rc-num').value = `REC-2026-${String(count).padStart(3,'0')}`;
   }
 
-  try { localStorage.setItem('av_docs',JSON.stringify(documents)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
+  localStorage.setItem('av_docs',JSON.stringify(documents));
   showToast('✅ Document enregistré !');
   // Save the specific doc to Firebase
   if(window._avFbOn && typeof fbPut === 'function') {
@@ -1996,8 +1851,9 @@ async function saveDoc(type) {
       window._editingDocType = null;
       window._editingDocNum = null;
       // Update number for next doc
+      var pfCount = documents.filter(function(d){ return d.type==='proforma'; }).length + 1;
       var pfNumEl = document.getElementById('pf-num');
-      if (pfNumEl) pfNumEl.value = nextDocNumber('proforma', 'PRO');
+      if (pfNumEl) pfNumEl.value = 'PRO-2026-' + String(pfCount).padStart(3,'0');
     } else {
       // Reset recu form
       document.querySelectorAll('#page-recu input, #page-recu textarea, #page-recu select').forEach(function(el) {
@@ -2012,8 +1868,9 @@ async function saveDoc(type) {
       var thumb2 = document.getElementById('rc-photo-thumb');
       if (thumb2) { thumb2.src = ''; thumb2.classList.remove('visible'); }
       // Update number for next doc
+      var rcCount = documents.filter(function(d){ return d.type==='recu'; }).length + 1;
       var rcNumEl = document.getElementById('rc-num');
-      if (rcNumEl) rcNumEl.value = nextDocNumber('recu', 'REC');
+      if (rcNumEl) rcNumEl.value = 'REC-2026-' + String(rcCount).padStart(3,'0');
     }
     // Navigate to documents list
     showPage('docs');
@@ -2149,7 +2006,8 @@ function creerRecuDepuisProforma(proforma) {
     }
 
     // Auto-number
-    document.getElementById('rc-num').value = nextDocNumber('recu', 'REC');
+    var rcCount = documents.filter(function(d){return d.type==='recu';}).length + 1;
+    document.getElementById('rc-num').value = 'REC-2026-' + String(rcCount).padStart(3,'0');
 
     showToast('✅ Reçu pré-rempli depuis ' + proforma.num);
   }, 300);
@@ -2189,7 +2047,9 @@ async function deleteDoc(doc) {
     // Compute the Firebase ID same way it was saved
     const fbId = deletedDoc._id || (deletedDoc.num || 'doc').replace(/[^a-zA-Z0-9]/g, '-');
     documents.splice(idx, 1);
-    try { localStorage.setItem('av_docs', JSON.stringify(documents)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
+    localStorage.setItem('av_docs', JSON.stringify(documents));
+    
+    // Delete from Firebase
     if (window._avFbOn) {
       try {
         // Delete directly from Firebase
@@ -2321,24 +2181,6 @@ function populateRecuForm(doc) {
 function filterDocs(val) { renderDocList(val); }
 
 // ══ DASHBOARD ══
-// Diagnostic : liste chaque reçu compté dans le chiffre d'affaires, pour
-// repérer un montant mal saisi ou un reçu en double / fantôme.
-function debugCA() {
-  var recus = documents.filter(function(d){ return d.type === 'recu'; });
-  var lignes = [];
-  var total = 0;
-  recus.forEach(function(d){
-    var montant = parseFloat((d.verse||'0').toString().replace(/[^\d.]/g,'')) || 0;
-    total += montant;
-    lignes.push((d.num || '(sans numéro)') + '  —  ' + fmt(montant) + ' GNF  —  ' + (d.client || '(sans client)'));
-  });
-  var message = 'DÉTAIL DU CHIFFRE D\'AFFAIRES\n';
-  message += recus.length + ' reçu(s) trouvé(s) dans la base :\n\n';
-  message += lignes.join('\n');
-  message += '\n\nTOTAL : ' + fmt(total) + ' GNF';
-  alert(message);
-}
-
 function updateDashboard() {
   let ca = 0;
   documents.filter(d=>d.type==='recu').forEach(d => {
@@ -2358,20 +2200,6 @@ function updateDashboard() {
   document.getElementById('stat-en-cours').textContent = enCours;
   document.getElementById('stat-en-transit').textContent = enTransit;
   document.getElementById('stat-arrive').textContent = arrive;
-
-  // Dépenses et Dépôts
-  let totalDepenseGNF = 0;
-  let totalDepotDollar = 0;
-  depenses.forEach(d => {
-    totalDepenseGNF += parseFloat(d.montant || 0);
-  });
-  depots.forEach(d => {
-    totalDepotDollar += parseFloat(d.montant || 0);
-  });
-  const depenseEl = document.getElementById('stat-depense-gnf');
-  if (depenseEl) depenseEl.textContent = fmt(totalDepenseGNF) + ' GNF';
-  const depotEl = document.getElementById('stat-depot-dollar');
-  if (depotEl) depotEl.textContent = fmt(totalDepotDollar) + ' USD';
 
   const db = document.getElementById('dashboard-docs');
   db.innerHTML = documents.length ? documents.slice(0,5).map(d=>docItemHTML(d)).join('') :
@@ -2536,7 +2364,6 @@ function openVoitureModal(v=null) {
     icon.style.display=''; txt.style.display=''; rmBtn.classList.remove('visible');
   }
   document.getElementById('voiture-form-overlay').classList.add('open');
-  showReturnBtn();
 }
 
 function editVoiture(id) {
@@ -2605,7 +2432,7 @@ function saveVoiture() {
     voitures.push(data);
     showToast('✅ Véhicule ajouté !');
   }
-  try { localStorage.setItem('av_voitures',JSON.stringify(voitures)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
+  localStorage.setItem('av_voitures',JSON.stringify(voitures));
   closeVoitureForm();
   renderVoitures();
   // Save to Firebase in background
@@ -2615,8 +2442,7 @@ function saveVoiture() {
 function deleteVoiture(id) {
   if (!confirm('Supprimer ce véhicule du stock ?')) return;
   voitures = voitures.filter(v=>v.id!==id);
-  try { localStorage.setItem('av_voitures',JSON.stringify(voitures)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
-  if(window._avFbOn)window._avSaveVoit();
+  localStorage.setItem('av_voitures',JSON.stringify(voitures));if(window._avFbOn)window._avSaveVoit();
   closeVoitureDetail();
   renderVoitures();
   showToast('🗑 Véhicule supprimé');
@@ -3077,16 +2903,7 @@ async function avFbLoadAll(silent) {
     var rawVoit = await fbGetAll('voitures');
     // Firebase is the source of truth - always replace local
     documents = rawDocs;
-    // Sur certains navigateurs (Safari/iPhone notamment), le stockage local
-    // a une limite plus stricte et peut être saturé par les photos jointes
-    // aux documents. On isole cette écriture pour qu'un dépassement de
-    // quota n'interrompe plus la synchronisation Firebase, qui elle a bien
-    // réussi à ce stade.
-    try {
-      localStorage.setItem('av_docs', JSON.stringify(documents));
-    } catch (quotaErr) {
-      console.log('Stockage local plein (sans impact sur Firebase) :', quotaErr.message);
-    }
+    localStorage.setItem('av_docs', JSON.stringify(documents));
     if (rawVoit.length > 0) {
       rawVoit.forEach(function(v){
         if(v.prix) v.prix=Number(v.prix);
@@ -3099,8 +2916,6 @@ async function avFbLoadAll(silent) {
     setBtnOk();
     updateDashboard();
     renderVoitures();
-    // Charger aussi les dépenses et dépôts depuis Firebase
-    await loadDépensesEtDépôts();
     if (!silent) showToast('✅ ' + documents.length + ' documents');
   } catch(e) {
     setBtnErr();
@@ -3189,21 +3004,6 @@ function avLogin() {
   }
 }
 
-function viderCacheLocal() {
-  if (!confirm('Effacer toutes les données locales et recharger depuis Firebase ?')) return;
-  try { localStorage.removeItem('av_docs'); } catch(e) {}
-  try { localStorage.removeItem('av_voitures'); } catch(e) {}
-  try { localStorage.removeItem('av_depenses'); } catch(e) {}
-  try { localStorage.removeItem('av_depots'); } catch(e) {}
-  documents = [];
-  voitures = [];
-  depenses = [];
-  depots = [];
-  if (window._avFbOn && typeof avFbLoadAll === 'function') {
-    avFbLoadAll(false);
-  }
-}
-
 function avLogout() {
   if (!confirm('Se deconnecter?')) return;
   localStorage.removeItem('av_session');
@@ -3289,205 +3089,6 @@ function closeSidebar() {
     sidebar.classList.remove('open');
     overlay.style.display = 'none';
   }
-}
-
-// Gérer le bouton de retour
-function showReturnBtn() {
-  var btn = document.getElementById('return-btn');
-  if (btn) btn.style.display = '';
-}
-
-function hideReturnBtn() {
-  var btn = document.getElementById('return-btn');
-  if (btn) btn.style.display = 'none';
-}
-
-function returnToMenu() {
-  // Fermer tous les formulaires/overlays ouverts
-  var overlays = document.querySelectorAll('.preview-overlay');
-  overlays.forEach(o => o.classList.remove('open'));
-  
-  hideReturnBtn();
-  closeSidebar();
-}
-
-}
-
-// ══ DÉPENSES ET DÉPÔTS ══
-var depenses = JSON.parse(localStorage.getItem('av_depenses') || '[]');
-var depots = JSON.parse(localStorage.getItem('av_depots') || '[]');
-
-async function saveDépense() {
-  const date = document.getElementById('dep-date')?.value;
-  const montant = parseFloat(document.getElementById('dep-montant')?.value || 0);
-  const desc = document.getElementById('dep-desc')?.value;
-  
-  if (!date || montant <= 0 || !desc) {
-    showToast('⚠️ Remplissez tous les champs');
-    return;
-  }
-  
-  const dep = {
-    id: Date.now(),
-    date,
-    montant,
-    desc,
-    createdAt: new Date().toISOString()
-  };
-  
-  depenses.unshift(dep);
-  try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) { console.log('Storage error:', e); }
-  
-  // Sauvegarde aussi sur Firebase
-  if (window._avFbOn && typeof fbPut === 'function') {
-    try {
-      await fbPut('depenses', 'dep-' + dep.id, dep);
-      // Après sauvegarde, recharge depuis Firebase pour synchroniser
-      await loadDépensesEtDépôts();
-    } catch(e) { console.log('Firebase error:', e); }
-  }
-  
-  document.getElementById('dep-date').value = '';
-  document.getElementById('dep-montant').value = '';
-  document.getElementById('dep-desc').value = '';
-  
-  renderDépenses();
-  updateDashboard();
-  showToast('✅ Dépense enregistrée !');
-}
-
-async function saveDépôt() {
-  const date = document.getElementById('dpo-date')?.value;
-  const montant = parseFloat(document.getElementById('dpo-montant')?.value || 0);
-  const desc = document.getElementById('dpo-desc')?.value;
-  
-  if (!date || montant <= 0 || !desc) {
-    showToast('⚠️ Remplissez tous les champs');
-    return;
-  }
-  
-  const dpo = {
-    id: Date.now(),
-    date,
-    montant,
-    desc,
-    createdAt: new Date().toISOString()
-  };
-  
-  depots.unshift(dpo);
-  try { localStorage.setItem('av_depots', JSON.stringify(depots)); } catch(e) { console.log('Storage error:', e); }
-  
-  // Sauvegarde aussi sur Firebase
-  if (window._avFbOn && typeof fbPut === 'function') {
-    try {
-      await fbPut('depots', 'dpo-' + dpo.id, dpo);
-      // Après sauvegarde, recharge depuis Firebase pour synchroniser
-      await loadDépensesEtDépôts();
-    } catch(e) { console.log('Firebase error:', e); }
-  }
-  
-  document.getElementById('dpo-date').value = '';
-  document.getElementById('dpo-montant').value = '';
-  document.getElementById('dpo-desc').value = '';
-  
-  renderDépôts();
-  updateDashboard();
-  showToast('✅ Dépôt enregistré !');
-}
-
-function renderDépenses() {
-  const list = document.getElementById('depenses-list');
-  if (!list) return;
-  
-  let totalDep = 0;
-  depenses.forEach(d => { totalDep += parseFloat(d.montant || 0); });
-  
-  const totalEl = document.getElementById('total-depenses');
-  if (totalEl) totalEl.textContent = fmt(totalDep) + ' GNF';
-  
-  if (depenses.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gris);">Aucune dépense enregistrée.</div>';
-    return;
-  }
-  
-  list.innerHTML = depenses.map(d => `
-    <div style="background:#fff;border:1px solid #ffe0b2;border-radius:8px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-weight:700;color:#ff9800;">${d.date} — ${d.desc}</div>
-        <div style="font-size:12px;color:var(--gris);">${fmt(d.montant)} GNF</div>
-      </div>
-      <button class="btn btn-sm" style="background:#ffcccc;color:#c0392b" onclick="deleteDépense(${d.id})">🗑 Supprimer</button>
-    </div>
-  `).join('');
-}
-
-function renderDépôts() {
-  const list = document.getElementById('depots-list');
-  if (!list) return;
-  
-  let totalDpo = 0;
-  depots.forEach(d => { totalDpo += parseFloat(d.montant || 0); });
-  
-  const totalEl = document.getElementById('total-depots');
-  if (totalEl) totalEl.textContent = fmt(totalDpo) + ' USD';
-  
-  if (depots.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gris);">Aucun dépôt enregistré.</div>';
-    return;
-  }
-  
-  list.innerHTML = depots.map(d => `
-    <div style="background:#fff;border:1px solid #c8e6c9;border-radius:8px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-weight:700;color:#4CAF50;">${d.date} — ${d.desc}</div>
-        <div style="font-size:12px;color:var(--gris);">${fmt(d.montant)} USD</div>
-      </div>
-      <button class="btn btn-sm" style="background:#ffcccc;color:#c0392b" onclick="deleteDépôt(${d.id})">🗑 Supprimer</button>
-    </div>
-  `).join('');
-}
-
-async function deleteDépense(id) {
-  if (!confirm('Supprimer cette dépense ?')) return;
-  depenses = depenses.filter(d => d.id !== id);
-  try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) { console.log('Storage error:', e); }
-  if (window._avFbOn && typeof fbDel === 'function') {
-    try {
-      await fbDel('depenses', 'dep-' + id);
-      // Après suppression, recharge depuis Firebase pour synchroniser
-      await loadDépensesEtDépôts();
-    } catch(e) { console.log('Firebase error:', e); }
-  }
-  renderDépenses();
-  updateDashboard();
-  showToast('🗑 Dépense supprimée');
-}
-
-async function deleteDépôt(id) {
-  if (!confirm('Supprimer ce dépôt ?')) return;
-  depots = depots.filter(d => d.id !== id);
-  try { localStorage.setItem('av_depots', JSON.stringify(depots)); } catch(e) { console.log('Storage error:', e); }
-  if (window._avFbOn && typeof fbDel === 'function') {
-    try {
-      await fbDel('depots', 'dpo-' + id);
-      // Après suppression, recharge depuis Firebase pour synchroniser
-      await loadDépensesEtDépôts();
-    } catch(e) { console.log('Firebase error:', e); }
-  }
-  renderDépôts();
-  updateDashboard();
-  showToast('🗑 Dépôt supprimé');
-}
-
-// Charger les dépenses et dépôts depuis Firebase au démarrage
-async function loadDépensesEtDépôts() {
-  if (!window._avFbOn || !typeof fbGetAll === 'function') return;
-  try {
-    depenses = await fbGetAll('depenses') || [];
-    depots = await fbGetAll('depots') || [];
-    try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) {}
-    try { localStorage.setItem('av_depots', JSON.stringify(depots)); } catch(e) {}
-  } catch(e) { console.log('Firebase load error:', e); }
 }
 
 // Hamburger visible on ALL screen sizes
