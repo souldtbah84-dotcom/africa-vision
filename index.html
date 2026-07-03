@@ -3098,6 +3098,8 @@ async function avFbLoadAll(silent) {
     setBtnOk();
     updateDashboard();
     renderVoitures();
+    // Charger aussi les dépenses et dépôts depuis Firebase
+    await loadDépensesEtDépôts();
     if (!silent) showToast('✅ ' + documents.length + ' documents');
   } catch(e) {
     setBtnErr();
@@ -3277,7 +3279,7 @@ function closeSidebar() {
 let depenses = JSON.parse(localStorage.getItem('av_depenses') || '[]');
 let depots = JSON.parse(localStorage.getItem('av_depots') || '[]');
 
-function saveDépense() {
+async function saveDépense() {
   const date = document.getElementById('dep-date')?.value;
   const montant = parseFloat(document.getElementById('dep-montant')?.value || 0);
   const desc = document.getElementById('dep-desc')?.value;
@@ -3300,7 +3302,11 @@ function saveDépense() {
   
   // Sauvegarde aussi sur Firebase
   if (window._avFbOn && typeof fbPut === 'function') {
-    fbPut('depenses', 'dep-' + dep.id, dep).catch(e => console.log('Firebase error:', e));
+    try {
+      await fbPut('depenses', 'dep-' + dep.id, dep);
+      // Après sauvegarde, recharge depuis Firebase pour synchroniser
+      await loadDépensesEtDépôts();
+    } catch(e) { console.log('Firebase error:', e); }
   }
   
   document.getElementById('dep-date').value = '';
@@ -3312,7 +3318,7 @@ function saveDépense() {
   showToast('✅ Dépense enregistrée !');
 }
 
-function saveDépôt() {
+async function saveDépôt() {
   const date = document.getElementById('dpo-date')?.value;
   const montant = parseFloat(document.getElementById('dpo-montant')?.value || 0);
   const desc = document.getElementById('dpo-desc')?.value;
@@ -3335,7 +3341,11 @@ function saveDépôt() {
   
   // Sauvegarde aussi sur Firebase
   if (window._avFbOn && typeof fbPut === 'function') {
-    fbPut('depots', 'dpo-' + dpo.id, dpo).catch(e => console.log('Firebase error:', e));
+    try {
+      await fbPut('depots', 'dpo-' + dpo.id, dpo);
+      // Après sauvegarde, recharge depuis Firebase pour synchroniser
+      await loadDépensesEtDépôts();
+    } catch(e) { console.log('Firebase error:', e); }
   }
   
   document.getElementById('dpo-date').value = '';
@@ -3399,24 +3409,32 @@ function renderDépôts() {
   `).join('');
 }
 
-function deleteDépense(id) {
+async function deleteDépense(id) {
   if (!confirm('Supprimer cette dépense ?')) return;
   depenses = depenses.filter(d => d.id !== id);
   try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) { console.log('Storage error:', e); }
   if (window._avFbOn && typeof fbDel === 'function') {
-    fbDel('depenses', 'dep-' + id).catch(e => console.log('Firebase error:', e));
+    try {
+      await fbDel('depenses', 'dep-' + id);
+      // Après suppression, recharge depuis Firebase pour synchroniser
+      await loadDépensesEtDépôts();
+    } catch(e) { console.log('Firebase error:', e); }
   }
   renderDépenses();
   updateDashboard();
   showToast('🗑 Dépense supprimée');
 }
 
-function deleteDépôt(id) {
+async function deleteDépôt(id) {
   if (!confirm('Supprimer ce dépôt ?')) return;
   depots = depots.filter(d => d.id !== id);
   try { localStorage.setItem('av_depots', JSON.stringify(depots)); } catch(e) { console.log('Storage error:', e); }
   if (window._avFbOn && typeof fbDel === 'function') {
-    fbDel('depots', 'dpo-' + id).catch(e => console.log('Firebase error:', e));
+    try {
+      await fbDel('depots', 'dpo-' + id);
+      // Après suppression, recharge depuis Firebase pour synchroniser
+      await loadDépensesEtDépôts();
+    } catch(e) { console.log('Firebase error:', e); }
   }
   renderDépôts();
   updateDashboard();
