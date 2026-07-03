@@ -1151,11 +1151,12 @@
       <!-- Photo -->
       <div class="field">
         <label>📷 Photo du véhicule</label>
-        <div class="photo-uploalabel for="vf-photo-input" class="photo-upload-zone" id="vf-photo-zone" style="cursor:pointer;display:block;">
-          <input type="file" id="vf-photo-input" accept="image/*" style="display:none" onchange="loadVfPhoto(this)">on" id="vf-upload-icon">🖼️</div>
+        <label for="vf-photo-input" class="photo-upload-zone" id="vf-photo-zone" style="cursor:pointer;display:block;">
+          <input type="file" id="vf-photo-input" accept="image/*" style="display:none" onchange="loadVfPhoto(this)">
+          <div id="vf-upload-icon">🖼️</div>
           <p id="vf-upload-txt">Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb">JPG, PNG — max 5 Mo</span></p>
           <img id="vf-photo-thumb" class="photo-preview-thumb" src="" alt="">
-        </div>
+        </label>
         <button class="remove-photo" id="vf-remove-photo" onclick="removeVfPhoto()">✕ Supprimer</button>
       </div>
 
