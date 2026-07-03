@@ -707,21 +707,6 @@
               <div class="total-row grand"><span>TOTAL NET</span><span id="pf-total">0 GNF</span></div>
             </div>
           </div>
-
-          <!-- DÉPENSES ET DÉPÔTS PROFORMA -->
-          <div style="margin-top:20px;background:#fff3e0;border:1.5px solid #ff9800;border-radius:10px;padding:16px 20px;">
-            <div style="font-size:12px;font-weight:700;color:#ff9800;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">💰 Dépenses & Dépôts</div>
-            <div class="form-grid-2">
-              <div class="field">
-                <label>Dépense en GNF</label>
-                <input type="number" id="pf-depense-gnf" value="0" placeholder="0" style="font-size:15px;font-weight:700;border-color:#ff9800">
-              </div>
-              <div class="field">
-                <label>Dépôt en Dollar</label>
-                <input type="number" id="pf-depot-dollar" value="0" placeholder="0" style="font-size:15px;font-weight:700;border-color:#ff9800">
-              </div>
-            </div>
-          </div>
         </div>
 
         <hr class="separator">
@@ -896,21 +881,6 @@
                   <option value="complet">✅ Complet (soldé)</option>
                   <option value="avance">🔄 Avance / Acompte</option>
                 </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- DÉPENSES ET DÉPÔTS -->
-          <div style="margin-top:20px;background:#fff3e0;border:1.5px solid #ff9800;border-radius:10px;padding:16px 20px;">
-            <div style="font-size:12px;font-weight:700;color:#ff9800;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">💰 Dépenses & Dépôts</div>
-            <div class="form-grid-2">
-              <div class="field">
-                <label>Dépense en GNF</label>
-                <input type="number" id="rc-depense-gnf" value="0" placeholder="0" oninput="calcPaiement()" style="font-size:15px;font-weight:700;border-color:#ff9800">
-              </div>
-              <div class="field">
-                <label>Dépôt en Dollar</label>
-                <input type="number" id="rc-depot-dollar" value="0" placeholder="0" oninput="calcPaiement()" style="font-size:15px;font-weight:700;border-color:#ff9800">
               </div>
             </div>
           </div>
@@ -1575,8 +1545,6 @@ function collectProforma() {
     kmEtat: document.getElementById('pf-km-etat').value,
     kmType: document.getElementById('pf-km-type').value,
     photo: window._pfPhoto || null,
-    depenseGNF: parseFloat(document.getElementById('pf-depense-gnf')?.value || 0),
-    depotDollar: parseFloat(document.getElementById('pf-depot-dollar')?.value || 0),
     createdAt: new Date().toISOString()
   };
 }
@@ -1619,8 +1587,6 @@ function collectRecu() {
     kmEtat: document.getElementById('rc-km-etat').value,
     kmType: document.getElementById('rc-km-type').value,
     photo: window._rcPhoto || null,
-    depenseGNF: parseFloat(document.getElementById('rc-depense-gnf')?.value || 0),
-    depotDollar: parseFloat(document.getElementById('rc-depot-dollar')?.value || 0),
     createdAt: new Date().toISOString()
   };
 }
