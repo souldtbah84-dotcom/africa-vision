@@ -513,6 +513,7 @@
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:12px;">
       <button id="menu-toggle" onclick="toggleSidebar()" style="display:none;background:none;border:none;cursor:pointer;font-size:22px;padding:4px;">☰</button>
+      <button id="return-btn" onclick="returnToMenu()" style="background:none;border:none;cursor:pointer;font-size:22px;padding:4px;color:var(--or);font-weight:700;display:none;">← Retour</button>
       <h1 id="page-title">Tableau de bord</h1>
     </div>
     <div class="topbar-actions">
@@ -1332,8 +1333,8 @@
 </div>
 <script>
 // ══ DATA STORE ══
-let documents = JSON.parse(localStorage.getItem('av_docs') || '[]');
-let voitures = JSON.parse(localStorage.getItem('av_voitures') || JSON.stringify([
+var documents = JSON.parse(localStorage.getItem('av_docs') || '[]');
+var voitures = JSON.parse(localStorage.getItem('av_voitures') || JSON.stringify([
   { id:1, nom:"Toyota Corolla", annee:"2024", couleur:"Blanc", prix:350000000, stock:2, carburant:"Essence", boite:"Automatique", portes:"4 portes", origine:"Japon", statut:"disponible", type:"Neuf", km:"0 km", desc:"Climatisation, GPS, vitres électriques, régulateur de vitesse", photo:null },
   { id:2, nom:"Honda CR-V", annee:"2023", couleur:"Gris", prix:480000000, stock:1, carburant:"Essence", boite:"Automatique", portes:"5 portes", origine:"Japon", statut:"disponible", type:"Neuf", km:"0 km", desc:"Toit ouvrant, caméra de recul, sièges en cuir, 7 places", photo:null },
   { id:3, nom:"Toyota Hilux", annee:"2024", couleur:"Noir", prix:650000000, stock:3, carburant:"Diesel", boite:"Manuelle", portes:"4 portes", origine:"Japon", statut:"disponible", type:"Neuf", km:"0 km", desc:"4x4, benne, climatisation, idéal pour tous terrains", photo:null },
@@ -1341,8 +1342,8 @@ let voitures = JSON.parse(localStorage.getItem('av_voitures') || JSON.stringify(
   { id:5, nom:"Nissan Patrol", annee:"2022", couleur:"Beige", prix:890000000, stock:2, carburant:"Diesel", boite:"Automatique", portes:"5 portes", origine:"Japon", statut:"disponible", type:"Occasion", km:"28 000 km", desc:"V8, 8 places, cuir, écran tactile, traction intégrale", photo:null },
   { id:6, nom:"Mercedes GLE", annee:"2024", couleur:"Noir", prix:1200000000, stock:1, carburant:"Diesel", boite:"Automatique", portes:"5 portes", origine:"Allemagne", statut:"transit", type:"Neuf", km:"0 km", desc:"Luxe absolu, toit panoramique, massage sièges, Burmester audio", photo:null },
 ]));
-let currentDocType = '';
-let currentDoc = null;
+var currentDocType = '';
+var currentDoc = null;
 
 // ══ NUMÉROTATION FIABLE ══
 // Calcule le prochain numéro en se basant sur le PLUS GRAND numéro existant
@@ -1402,6 +1403,11 @@ function showPage(p) {
   document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   document.getElementById('page-title').textContent = pageTitles[p] || p;
+  
+  // Afficher le bouton retour sauf sur le tableau de bord
+  var returnBtn = document.getElementById('return-btn');
+  if (returnBtn) returnBtn.style.display = (p === 'dashboard') ? 'none' : 'block';
+  
   event.currentTarget && event.currentTarget.classList.add('active');
   if (p === 'liste') renderDocList();
   if (p === 'clients') renderClients();
@@ -1410,25 +1416,11 @@ function showPage(p) {
   if (p === 'depenses') renderDépenses();
   if (p === 'depots') renderDépôts();
 
-  // Correctif affichage : le contenu de certaines pages restait invisible
-  // tant que rien ne forçait le navigateur à repeindre l'écran (c'est pour
-  // ça que défiler manuellement "révélait" les informations). On simule ce
-  // même défilement automatiquement, juste après le changement de page.
+  // Force un repaint léger pour éviter l'espace vide
   var pageEl = document.getElementById('page-'+p);
-  window.scrollTo(0, 0);
-  function nudge() {
-    window.scrollTo(0, 2);
-    window.scrollTo(0, 0);
-    if (pageEl) {
-      pageEl.style.display = 'none';
-      void pageEl.offsetHeight;
-      pageEl.style.display = '';
-    }
+  if (pageEl) {
+    void pageEl.offsetHeight;
   }
-  nudge();
-  requestAnimationFrame(nudge);
-  setTimeout(nudge, 60);
-  setTimeout(nudge, 200);
 }
 
 function showTab(id, el) {
@@ -2537,6 +2529,7 @@ function openVoitureModal(v=null) {
     icon.style.display=''; txt.style.display=''; rmBtn.classList.remove('visible');
   }
   document.getElementById('voiture-form-overlay').classList.add('open');
+  showReturnBtn();
 }
 
 function editVoiture(id) {
@@ -3276,9 +3269,31 @@ function closeSidebar() {
   }
 }
 
+// Gérer le bouton de retour
+function showReturnBtn() {
+  var btn = document.getElementById('return-btn');
+  if (btn) btn.style.display = '';
+}
+
+function hideReturnBtn() {
+  var btn = document.getElementById('return-btn');
+  if (btn) btn.style.display = 'none';
+}
+
+function returnToMenu() {
+  // Fermer tous les formulaires/overlays ouverts
+  var overlays = document.querySelectorAll('.preview-overlay');
+  overlays.forEach(o => o.classList.remove('open'));
+  
+  hideReturnBtn();
+  closeSidebar();
+}
+
+}
+
 // ══ DÉPENSES ET DÉPÔTS ══
-let depenses = JSON.parse(localStorage.getItem('av_depenses') || '[]');
-let depots = JSON.parse(localStorage.getItem('av_depots') || '[]');
+var depenses = JSON.parse(localStorage.getItem('av_depenses') || '[]');
+var depots = JSON.parse(localStorage.getItem('av_depots') || '[]');
 
 async function saveDépense() {
   const date = document.getElementById('dep-date')?.value;
