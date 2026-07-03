@@ -3214,34 +3214,6 @@ function avLogout() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Sidebar buttons
-  var nav = document.querySelector('.sidebar');
-  if (nav) {
-    var d = document.createElement('div');
-    d.style.cssText = 'padding:12px 16px;border-top:1px solid #222;';
-    var b1 = document.createElement('button');
-    b1.id = 'av-fb-btn';
-    b1.textContent = '🔄 Charger données';
-    b1.style.cssText = 'width:100%;padding:11px;background:#FF6B2B;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;font-family:Inter,sans-serif;margin-bottom:6px;display:block;';
-    b1.onclick = function(){ avFbLoadAll(false); };
-    var b2 = document.createElement('button');
-    b2.textContent = '🔄 Synchroniser';
-    b2.style.cssText = 'width:100%;padding:8px;background:none;border:1px solid #333;color:#666;border-radius:8px;cursor:pointer;font-size:12px;font-family:Inter,sans-serif;margin-bottom:4px;';
-    b2.onclick = function(){ avFbLoadAll(false); };
-    var b3 = document.createElement('button');
-    b3.textContent = '🗑 Vider cache local';
-    b3.style.cssText = 'width:100%;padding:8px;background:none;border:1px solid #c00;color:#c00;border-radius:8px;cursor:pointer;font-size:11px;font-family:Inter,sans-serif;';
-    b3.onclick = function(){
-      if(!confirm('Effacer toutes les données locales et recharger depuis Firebase ?')) return;
-      localStorage.removeItem('av_docs');
-      localStorage.removeItem('av_voitures');
-      documents = [];
-      voitures = [];
-      avFbLoadAll(false);
-    };
-    d.appendChild(b1); d.appendChild(b2); d.appendChild(b3); nav.appendChild(d);
-  }
-
   // Check session
   var s = localStorage.getItem('av_session');
   if (s) {
