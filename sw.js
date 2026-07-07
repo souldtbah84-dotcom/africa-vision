@@ -1,51 +1,53 @@
-// Service Worker — Africa Vision Reçus
-// Stratégie : network-first (toujours essayer le réseau en premier pour éviter
-// les données obsolètes, avec repli sur le cache si hors-ligne).
-
-const CACHE_NAME = 'av-recus-cache-v1';
-const CORE_ASSETS = [
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+// Service Worker - Africa Vision Multiservices v3
+// Network-first strategy - always get fresh content
+var CACHE_NAME = 'africa-vision-v3';
+var ASSETS = [
+  '/africa-vision/',
+  '/africa-vision/index.html',
+  '/africa-vision/manifest.json',
+  '/africa-vision/icon-192.png',
+  '/africa-vision/icon-512.png'
 ];
 
-self.addEventListener('install', function (event) {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(function (cache) {
-      return cache.addAll(CORE_ASSETS);
-    })
-  );
+self.addEventListener('install', function(e) {
   self.skipWaiting();
-});
-
-self.addEventListener('activate', function (event) {
-  event.waitUntil(
-    caches.keys().then(function (names) {
-      return Promise.all(
-        names
-          .filter(function (n) { return n !== CACHE_NAME; })
-          .map(function (n) { return caches.delete(n); })
-      );
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(function(cache) {
+      return cache.addAll(ASSETS).catch(function(){});
     })
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', function (event) {
-  if (event.request.method !== 'GET') return;
+self.addEventListener('activate', function(e) {
+  e.waitUntil(
+    caches.keys().then(function(names) {
+      return Promise.all(
+        names.filter(function(n){ return n !== CACHE_NAME; })
+             .map(function(n){ return caches.delete(n); })
+      );
+    }).then(function() {
+      return self.clients.claim();
+    })
+  );
+});
 
-  event.respondWith(
-    fetch(event.request)
-      .then(function (response) {
-        var copy = response.clone();
-        caches.open(CACHE_NAME).then(function (cache) {
-          cache.put(event.request, copy);
+self.addEventListener('fetch', function(e) {
+  // Always try network first
+  e.respondWith(
+    fetch(e.request).then(function(response) {
+      // Cache successful responses
+      if (response.ok) {
+        var clone = response.clone();
+        caches.open(CACHE_NAME).then(function(cache) {
+          cache.put(e.request, clone);
         });
-        return response;
-      })
-      .catch(function () {
-        return caches.match(event.request);
-      })
+      }
+      return response;
+    }).catch(function() {
+      // Offline: serve from cache
+      return caches.match(e.request).then(function(cached) {
+        return cached || caches.match('/africa-vision/');
+      });
+    })
   );
 });
