@@ -105,7 +105,7 @@
   .btn-sm { padding: 6px 12px; font-size: 12px; }
 
   /* ── PAGES ── */
-  .page { display: none; padding: 32px; }
+  .page { display: none; padding: 40px 32px 32px; }
   .page.active { display: block; }
 
   /* ── DASHBOARD ── */
@@ -378,16 +378,14 @@
 
   /* ── TABLET ── */
 @media (max-width: 900px) {
-  .sidebar { width: 200px; }
-  .main { margin-left: 200px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .form-grid { grid-template-columns: 1fr; }
   .voiture-grid { grid-template-columns: 1fr 1fr; }
 }
 
 /* ── MOBILE ── */
-@media (max-width: 600px) {
-  /* Sidebar cachée par défaut sur mobile */
+@media (max-width: 900px) {
+  /* Sidebar cachée par défaut sur mobile — seuil aligné avec le JS (900px) */
   .sidebar {
     position: fixed; left: -260px; width: 260px; z-index: 200;
     transition: left 0.3s ease; box-shadow: 4px 0 20px rgba(0,0,0,0.5);
@@ -402,7 +400,7 @@
   .topbar-actions .btn { padding: 7px 12px; font-size: 12px; }
 
   /* Pages */
-  .page { padding: 16px; }
+  .page { padding: 24px 16px 16px; }
 
   /* Stats grid 1 colonne */
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
@@ -726,7 +724,7 @@
               <div class="upload-icon">🖼️</div>
               <p>Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb;">JPG, PNG, WEBP — max 5 Mo</span></p>
               <img id="pf-photo-thumb" class="photo-preview-thumb" src="" alt="Aperçu">
-            </div>
+            </label>
             <button class="remove-photo" id="pf-remove-photo" onclick="removePhoto('pf')">✕ Supprimer la photo</button>
           </div>
           <div class="field">
@@ -903,7 +901,7 @@
               <div class="upload-icon">🖼️</div>
               <p>Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb;">JPG, PNG, WEBP — max 5 Mo</span></p>
               <img id="rc-photo-thumb" class="photo-preview-thumb" src="" alt="Aperçu">
-            </div>
+            </label>
             <button class="remove-photo" id="rc-remove-photo" onclick="removePhoto('rc')">✕ Supprimer la photo</button>
           </div>
           <div class="form-grid" style="display:grid;grid-template-columns:1fr;gap:16px;align-content:start;">
