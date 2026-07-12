@@ -1075,7 +1075,8 @@
             <input type="text" id="dep-desc" placeholder="Ex: Carburant, maintenance..." style="border-color:var(--or)">
           </div>
         </div>
-        <button class="btn btn-primary" onclick="saveDépense()" style="margin-top:12px;background:var(--or)">💾 Enregistrer Dépense</button>
+        <button class="btn btn-primary" id="dep-save-btn" onclick="saveDépense()" style="margin-top:12px;background:var(--or)">💾 Enregistrer Dépense</button>
+        <button class="btn" id="dep-cancel-btn" onclick="cancelEditDépense()" style="margin-top:12px;margin-left:8px;background:#eee;color:#555;display:none">✕ Annuler la modification</button>
       </div>
     </div>
 
@@ -1111,7 +1112,8 @@
             <input type="text" id="dpo-desc" placeholder="Ex: Transfert client, commission..." style="border-color:#4CAF50">
           </div>
         </div>
-        <button class="btn btn-primary" onclick="saveDépôt()" style="margin-top:12px;background:#4CAF50">💾 Enregistrer Dépôt</button>
+        <button class="btn btn-primary" id="dpo-save-btn" onclick="saveDépôt()" style="margin-top:12px;background:#4CAF50">💾 Enregistrer Dépôt</button>
+        <button class="btn" id="dpo-cancel-btn" onclick="cancelEditDépôt()" style="margin-top:12px;margin-left:8px;background:#eee;color:#555;display:none">✕ Annuler la modification</button>
       </div>
     </div>
 
@@ -3284,6 +3286,8 @@ function returnToMenu() {
 // ══ DÉPENSES ET DÉPÔTS ══
 var depenses = JSON.parse(localStorage.getItem('av_depenses') || '[]');
 var depots = JSON.parse(localStorage.getItem('av_depots') || '[]');
+var _editingDepenseId = null;
+var _editingDepotId = null;
 
 async function saveDépense() {
   const date = document.getElementById('dep-date')?.value;
@@ -3292,6 +3296,35 @@ async function saveDépense() {
   
   if (!date || montant <= 0 || !desc) {
     showToast('⚠️ Remplissez tous les champs');
+    return;
+  }
+
+  if (_editingDepenseId !== null) {
+    const idx = depenses.findIndex(d => d.id === _editingDepenseId);
+    if (idx === -1) {
+      showToast('⚠️ Dépense introuvable');
+      cancelEditDépense();
+      return;
+    }
+    const dep = depenses[idx];
+    dep.date = date;
+    dep.montant = montant;
+    dep.desc = desc;
+    dep.updatedAt = new Date().toISOString();
+
+    try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) { console.log('Storage error:', e); }
+
+    if (window._avFbOn && typeof fbPut === 'function') {
+      try {
+        await fbPut('depenses', 'dep-' + dep.id, dep);
+        await loadDépensesEtDépôts();
+      } catch(e) { console.log('Firebase error:', e); }
+    }
+
+    cancelEditDépense();
+    renderDépenses();
+    updateDashboard();
+    showToast('✅ Dépense modifiée !');
     return;
   }
   
@@ -3324,6 +3357,31 @@ async function saveDépense() {
   showToast('✅ Dépense enregistrée !');
 }
 
+function editDépense(id) {
+  const dep = depenses.find(d => d.id === id);
+  if (!dep) return;
+  document.getElementById('dep-date').value = dep.date || '';
+  document.getElementById('dep-montant').value = dep.montant || '';
+  document.getElementById('dep-desc').value = dep.desc || '';
+  _editingDepenseId = id;
+  const btn = document.getElementById('dep-save-btn');
+  if (btn) btn.textContent = '💾 Mettre à jour la dépense';
+  const cancelBtn = document.getElementById('dep-cancel-btn');
+  if (cancelBtn) cancelBtn.style.display = 'inline-block';
+  document.getElementById('page-depenses')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function cancelEditDépense() {
+  _editingDepenseId = null;
+  document.getElementById('dep-date').value = '';
+  document.getElementById('dep-montant').value = '';
+  document.getElementById('dep-desc').value = '';
+  const btn = document.getElementById('dep-save-btn');
+  if (btn) btn.textContent = '💾 Enregistrer Dépense';
+  const cancelBtn = document.getElementById('dep-cancel-btn');
+  if (cancelBtn) cancelBtn.style.display = 'none';
+}
+
 async function saveDépôt() {
   const date = document.getElementById('dpo-date')?.value;
   const montant = parseFloat(document.getElementById('dpo-montant')?.value || 0);
@@ -3331,6 +3389,35 @@ async function saveDépôt() {
   
   if (!date || montant <= 0 || !desc) {
     showToast('⚠️ Remplissez tous les champs');
+    return;
+  }
+
+  if (_editingDepotId !== null) {
+    const idx = depots.findIndex(d => d.id === _editingDepotId);
+    if (idx === -1) {
+      showToast('⚠️ Dépôt introuvable');
+      cancelEditDépôt();
+      return;
+    }
+    const dpo = depots[idx];
+    dpo.date = date;
+    dpo.montant = montant;
+    dpo.desc = desc;
+    dpo.updatedAt = new Date().toISOString();
+
+    try { localStorage.setItem('av_depots', JSON.stringify(depots)); } catch(e) { console.log('Storage error:', e); }
+
+    if (window._avFbOn && typeof fbPut === 'function') {
+      try {
+        await fbPut('depots', 'dpo-' + dpo.id, dpo);
+        await loadDépensesEtDépôts();
+      } catch(e) { console.log('Firebase error:', e); }
+    }
+
+    cancelEditDépôt();
+    renderDépôts();
+    updateDashboard();
+    showToast('✅ Dépôt modifié !');
     return;
   }
   
@@ -3363,6 +3450,31 @@ async function saveDépôt() {
   showToast('✅ Dépôt enregistré !');
 }
 
+function editDépôt(id) {
+  const dpo = depots.find(d => d.id === id);
+  if (!dpo) return;
+  document.getElementById('dpo-date').value = dpo.date || '';
+  document.getElementById('dpo-montant').value = dpo.montant || '';
+  document.getElementById('dpo-desc').value = dpo.desc || '';
+  _editingDepotId = id;
+  const btn = document.getElementById('dpo-save-btn');
+  if (btn) btn.textContent = '💾 Mettre à jour le dépôt';
+  const cancelBtn = document.getElementById('dpo-cancel-btn');
+  if (cancelBtn) cancelBtn.style.display = 'inline-block';
+  document.getElementById('page-depots')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function cancelEditDépôt() {
+  _editingDepotId = null;
+  document.getElementById('dpo-date').value = '';
+  document.getElementById('dpo-montant').value = '';
+  document.getElementById('dpo-desc').value = '';
+  const btn = document.getElementById('dpo-save-btn');
+  if (btn) btn.textContent = '💾 Enregistrer Dépôt';
+  const cancelBtn = document.getElementById('dpo-cancel-btn');
+  if (cancelBtn) cancelBtn.style.display = 'none';
+}
+
 function renderDépenses() {
   const list = document.getElementById('depenses-list');
   if (!list) return;
@@ -3384,7 +3496,10 @@ function renderDépenses() {
         <div style="font-weight:700;color:#ff9800;">${d.date} — ${d.desc}</div>
         <div style="font-size:12px;color:var(--gris);">${fmt(d.montant)} GNF</div>
       </div>
-      <button class="btn btn-sm" style="background:#ffcccc;color:#c0392b" onclick="deleteDépense(${d.id})">🗑 Supprimer</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" style="background:#fff3cd;color:#856404" onclick="editDépense(${d.id})">✏️ Modifier</button>
+        <button class="btn btn-sm" style="background:#ffcccc;color:#c0392b" onclick="deleteDépense(${d.id})">🗑 Supprimer</button>
+      </div>
     </div>
   `).join('');
 }
@@ -3410,7 +3525,10 @@ function renderDépôts() {
         <div style="font-weight:700;color:#4CAF50;">${d.date} — ${d.desc}</div>
         <div style="font-size:12px;color:var(--gris);">${fmt(d.montant)} USD</div>
       </div>
-      <button class="btn btn-sm" style="background:#ffcccc;color:#c0392b" onclick="deleteDépôt(${d.id})">🗑 Supprimer</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" style="background:#fff3cd;color:#856404" onclick="editDépôt(${d.id})">✏️ Modifier</button>
+        <button class="btn btn-sm" style="background:#ffcccc;color:#c0392b" onclick="deleteDépôt(${d.id})">🗑 Supprimer</button>
+      </div>
     </div>
   `).join('');
 }
@@ -3418,6 +3536,7 @@ function renderDépôts() {
 async function deleteDépense(id) {
   if (!confirm('Supprimer cette dépense ?')) return;
   depenses = depenses.filter(d => d.id !== id);
+  if (_editingDepenseId === id) cancelEditDépense();
   try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) { console.log('Storage error:', e); }
   if (window._avFbOn && typeof fbDel === 'function') {
     try {
@@ -3434,6 +3553,7 @@ async function deleteDépense(id) {
 async function deleteDépôt(id) {
   if (!confirm('Supprimer ce dépôt ?')) return;
   depots = depots.filter(d => d.id !== id);
+  if (_editingDepotId === id) cancelEditDépôt();
   try { localStorage.setItem('av_depots', JSON.stringify(depots)); } catch(e) { console.log('Storage error:', e); }
   if (window._avFbOn && typeof fbDel === 'function') {
     try {
