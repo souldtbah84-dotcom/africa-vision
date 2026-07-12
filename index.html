@@ -3448,11 +3448,41 @@ async function deleteDépôt(id) {
 }
 
 // Charger les dépenses et dépôts depuis Firebase au démarrage
+// Sécurité anti-perte : toute entrée présente localement mais absente sur Firebase
+// est d'abord renvoyée vers Firebase avant que Firebase ne soit considéré comme la référence.
+// Cela évite qu'une donnée jamais synchronisée soit silencieusement remplacée par du vide.
 async function loadDépensesEtDépôts() {
   if (!window._avFbOn || typeof fbGetAll !== 'function') return;
   try {
-    depenses = await fbGetAll('depenses') || [];
-    depots = await fbGetAll('depots') || [];
+    var localDep = depenses.slice();
+    var localDpo = depots.slice();
+
+    var fbDep = await fbGetAll('depenses') || [];
+    var fbDpo = await fbGetAll('depots') || [];
+
+    var fbDepIds = fbDep.map(function(d){ return d.id; });
+    for (var i=0; i<localDep.length; i++) {
+      if (fbDepIds.indexOf(localDep[i].id) === -1) {
+        try {
+          await fbPut('depenses', 'dep-' + localDep[i].id, localDep[i]);
+          fbDep.push(localDep[i]);
+          console.log('Dépense locale renvoyée vers Firebase (manquante) :', localDep[i].id);
+        } catch(e) { console.log('Échec renvoi dépense vers Firebase:', e); }
+      }
+    }
+    var fbDpoIds = fbDpo.map(function(d){ return d.id; });
+    for (var j=0; j<localDpo.length; j++) {
+      if (fbDpoIds.indexOf(localDpo[j].id) === -1) {
+        try {
+          await fbPut('depots', 'dpo-' + localDpo[j].id, localDpo[j]);
+          fbDpo.push(localDpo[j]);
+          console.log('Dépôt local renvoyé vers Firebase (manquant) :', localDpo[j].id);
+        } catch(e) { console.log('Échec renvoi dépôt vers Firebase:', e); }
+      }
+    }
+
+    depenses = fbDep;
+    depots = fbDpo;
     try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) {}
     try { localStorage.setItem('av_depots', JSON.stringify(depots)); } catch(e) {}
   } catch(e) { console.log('Firebase load error:', e); }
