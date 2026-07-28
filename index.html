@@ -1039,6 +1039,27 @@
               <div class="total-row grand"><span>TOTAL NET (sans TVA)</span><span id="tp-total">0 GNF</span></div>
             </div>
           </div>
+
+          <!-- PAIEMENT PARTIEL TRANSPORT -->
+          <div style="margin-top:20px;background:#f0faf5;border:1.5px solid var(--vert);border-radius:10px;padding:16px 20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+              <div style="font-size:12px;font-weight:700;color:var(--vert);text-transform:uppercase;letter-spacing:0.08em;">💳 Détail du paiement</div>
+              <span id="tp-paiement-badge" style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:#eee;color:#888;">— Aucun montant —</span>
+            </div>
+            <div class="form-grid-3">
+              <div class="field">
+                <label>Montant versé (acompte)</label>
+                <input type="number" id="tp-verse" value="0" placeholder="0" oninput="calcPaiementTransport()" style="font-size:15px;font-weight:700;border-color:var(--vert)">
+              </div>
+              <div class="field">
+                <label>Reste à payer</label>
+                <input type="text" id="tp-reste" value="0 GNF" readonly style="background:#e8f5ee;font-weight:700;color:var(--vert);border-color:var(--vert)">
+              </div>
+              <div class="field" style="display:flex;align-items:flex-end;">
+                <button type="button" class="btn btn-outline btn-sm" style="width:100%;" onclick="soldeTransport()">✅ Marquer le solde payé</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <hr class="separator">
@@ -1781,6 +1802,7 @@ function calcTotals(prefix) {
   if (tvaValEl) tvaValEl.textContent = fmt(tvaVal) + ' GNF';
   document.getElementById(`${prefix}-total`).textContent = fmt(total) + ' GNF';
   if (prefix === 'rc') calcPaiement();
+  if (prefix === 'tp') calcPaiementTransport();
 }
 
 function calcPaiement() {
@@ -1793,6 +1815,44 @@ function calcPaiement() {
   const statut = document.getElementById('rc-paiement-statut');
   if (verse >= total && total > 0) statut.value = 'complet';
   else if (verse > 0) statut.value = 'partiel';
+}
+
+function calcPaiementTransport() {
+  const totalEl = document.getElementById('tp-total');
+  const badge = document.getElementById('tp-paiement-badge');
+  if (!totalEl || !badge) return;
+  const total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('GNF','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
+  const verseEl = document.getElementById('tp-verse');
+  const verse = parseFloat(verseEl.value) || 0;
+  const reste = Math.max(0, total - verse);
+  document.getElementById('tp-reste').value = fmt(reste) + ' GNF';
+
+  window._tpPaiementStatut = 'non_paye';
+  if (total <= 0) {
+    badge.textContent = '— Aucun montant —';
+    badge.style.background = '#eee'; badge.style.color = '#888';
+  } else if (verse >= total) {
+    window._tpPaiementStatut = 'complet';
+    badge.textContent = '✅ Payé';
+    badge.style.background = '#e0f5ea'; badge.style.color = '#1E7E5A';
+  } else if (verse > 0) {
+    window._tpPaiementStatut = 'partiel';
+    badge.textContent = '⚠️ Partiel';
+    badge.style.background = '#fdf3dc'; badge.style.color = '#A0722B';
+  } else {
+    window._tpPaiementStatut = 'non_paye';
+    badge.textContent = '❌ Non payé';
+    badge.style.background = '#fbe4e4'; badge.style.color = '#C0392B';
+  }
+}
+
+function soldeTransport() {
+  const totalEl = document.getElementById('tp-total');
+  if (!totalEl) return;
+  const total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('GNF','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
+  document.getElementById('tp-verse').value = total;
+  calcPaiementTransport();
+  showToast('✅ Solde marqué comme payé');
 }
 
 function fmt(n) {
@@ -1936,6 +1996,9 @@ function collectTransport() {
     adresse: document.getElementById('tp-adresse').value,
     items,
     total: document.getElementById('tp-total').textContent,
+    verse: document.getElementById('tp-verse').value,
+    reste: document.getElementById('tp-reste').value,
+    paiementStatut: window._tpPaiementStatut || 'non_paye',
     notes: document.getElementById('tp-notes').value,
     km: document.getElementById('tp-km').value,
     kmEtat: document.getElementById('tp-km-etat').value,
@@ -2013,6 +2076,10 @@ function buildDocHTML(doc, preview=false) {
        <div class="doc-pdf-total-row"><span>Montant versé</span><span style="color:#1E7E5A;font-weight:700">${fmt(doc.verse||0)} GNF</span></div>
        <div class="doc-pdf-total-row"><span>Reste à payer</span><span style="color:${parseFloat(doc.verse||0) >= parseFloat((doc.reste||'1').replace(/[^\d]/g,'')) ? '#1E7E5A' : '#C0392B'};font-weight:700">${doc.reste||'0 GNF'}</span></div>
        <div class="doc-pdf-total-row"><span>Statut</span><span style="font-weight:700">${paiementStatutLabel[doc.paiementStatut]||'—'}</span></div>`;
+  } else if (isTransport && doc.verse != null) {
+    extra = `<div class="doc-pdf-total-row"><span>Montant versé</span><span style="color:#1E7E5A;font-weight:700">${fmt(doc.verse||0)} GNF</span></div>
+       <div class="doc-pdf-total-row"><span>Reste à payer</span><span style="color:${parseFloat(doc.verse||0) >= parseFloat((doc.reste||'1').replace(/[^\d]/g,'')) ? '#1E7E5A' : '#C0392B'};font-weight:700">${doc.reste||'0 GNF'}</span></div>
+       <div class="doc-pdf-total-row"><span>Statut</span><span style="font-weight:700">${{non_paye:'❌ Non payé',partiel:'⚠️ Paiement partiel',complet:'✅ Soldé – Payé'}[doc.paiementStatut]||'—'}</span></div>`;
   } else if (isDouane && doc.declaration) {
     extra = `<div class="doc-pdf-total-row"><span>N° déclaration douanière</span><span>${doc.declaration}</span></div>`;
   }
@@ -2313,8 +2380,11 @@ function shareWhatsApp() {
   const doc = currentDoc;
   const type = DOC_LABELS[doc.type] || 'Document';
   const vehicule = doc.items?.[0]?.designation || 'Véhicule';
+  const paiementLabels = { non_paye: '❌ Non payé', partiel: '⚠️ Partiel', complet: '✅ Soldé' };
   const extraLine = doc.type === 'proforma' ? `⏳ Valable jusqu'au : ${doc.valid || '—'}`
     : doc.type === 'recu' ? `💳 Mode de paiement : ${doc.mode || '—'}`
+    : doc.type === 'transport' && doc.verse != null
+      ? `💳 Versé : *${fmt(doc.verse||0)} GNF*\n💰 Reste à payer : *${doc.reste||'0 GNF'}*\n📌 Statut : *${paiementLabels[doc.paiementStatut] || '—'}*`
     : doc.refPf ? `🔗 Réf. Proforma : ${doc.refPf}` : '';
   const message =
 `🚗 *AFRICA VISION MULTISERVICES*
@@ -2537,6 +2607,7 @@ function docItemHTML(doc) {
     + '<div class="doc-num">' + (doc.num||'') + ' ' + badge + ' ' + statutCmd + '</div>'
     + '<div class="doc-client">👤 ' + (doc.client || '—') + '</div>'
     + '<div class="doc-meta">📅 ' + (doc.date||'') + ' — ' + (doc.items&&doc.items[0]?doc.items[0].designation:'Vehicule') + '</div>'
+    + ((doc.type==='recu' || doc.type==='transport') && doc.paiementStatut ? '<div style="font-size:11px;margin-top:2px;">' + ({non_paye:'❌ Non payé',partiel:'⚠️ Partiel',complet:'✅ Soldé',avance:'🔄 Acompte'}[doc.paiementStatut]||'') + '</div>' : '')
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">'
     + '<div class="doc-montant">' + (doc.total||'') + '</div>'
@@ -2811,7 +2882,9 @@ function populateTransportForm(doc) {
       <td><button class="remove-row" onclick="removeRow(this,'tp')">×</button></td>`;
     tbody.appendChild(tr);
   });
+  document.getElementById('tp-verse').value = doc.verse || 0;
   calcTotals('tp');
+  calcPaiementTransport();
 
   if (doc.photo) {
     window._tpPhoto = doc.photo;
@@ -3351,7 +3424,7 @@ function openClientDetail(nomEncoded) {
             <div>
               <div style="font-weight:700;font-size:13px;">${d.num} ${badge}</div>
               <div style="font-size:12px;color:var(--gris);margin-top:2px;">📅 ${d.date} · ${d.items?.[0]?.designation||'Véhicule'}</div>
-              ${d.type==='recu' && d.paiementStatut ? `<div style="font-size:11px;margin-top:2px;">${{partiel:'⚠️ Partiel',complet:'✅ Soldé',avance:'🔄 Acompte'}[d.paiementStatut]||''}</div>` : ''}
+              ${(d.type==='recu' || d.type==='transport') && d.paiementStatut ? `<div style="font-size:11px;margin-top:2px;">${{non_paye:'❌ Non payé',partiel:'⚠️ Partiel',complet:'✅ Soldé',avance:'🔄 Acompte'}[d.paiementStatut]||''}</div>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="font-weight:800;color:var(--or);font-size:14px;">${d.total}</span>
