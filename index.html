@@ -1317,6 +1317,22 @@
           <option value="dispo">Disponibles</option>
           <option value="rupture">Rupture</option>
         </select>
+        <select id="voiture-filtre-marque" onchange="renderVoitures()"
+          style="padding:9px 12px;border:1.5px solid var(--gris-clair);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif">
+          <option value="">Toutes marques</option>
+        </select>
+        <select id="voiture-filtre-origine" onchange="renderVoitures()"
+          style="padding:9px 12px;border:1.5px solid var(--gris-clair);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif">
+          <option value="">Toutes origines</option>
+        </select>
+        <select id="voiture-tri" onchange="renderVoitures()"
+          style="padding:9px 12px;border:1.5px solid var(--gris-clair);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif">
+          <option value="recent">Plus récent</option>
+          <option value="ancien">Plus ancien</option>
+          <option value="prix-asc">Prix croissant</option>
+          <option value="prix-desc">Prix décroissant</option>
+          <option value="annee-desc">Année récente</option>
+        </select>
       </div>
       <button class="btn btn-primary" onclick="openVoitureModal()">+ Ajouter un véhicule</button>
     </div>
@@ -1468,16 +1484,16 @@
     </div>
     <div style="overflow-y:auto;padding:28px;display:flex;flex-direction:column;gap:16px;">
 
-      <!-- Photo -->
+      <!-- Photos : jusqu'à 5 -->
       <div class="field">
-        <label>📷 Photo du véhicule</label>
+        <label>📷 Photos du véhicule <span id="vf-photo-count" style="color:var(--gris);font-weight:400">(0/5)</span></label>
         <label for="vf-photo-input" class="photo-upload-zone" id="vf-photo-zone" style="cursor:pointer;display:block;">
-          <input type="file" id="vf-photo-input" accept="image/*" style="display:none" onchange="loadVfPhoto(this)">
+          <input type="file" id="vf-photo-input" accept="image/*" multiple style="display:none" onchange="loadVfPhoto(this)">
           <div id="vf-upload-icon">🖼️</div>
-          <p id="vf-upload-txt">Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb">JPG, PNG — max 5 Mo</span></p>
+          <p id="vf-upload-txt">Cliquez pour ajouter jusqu'à 5 photos<br><span style="font-size:11px;color:#bbb">Extérieur, intérieur, moteur, compteur…</span></p>
           <img id="vf-photo-thumb" class="photo-preview-thumb" src="" alt="">
         </label>
-        <button class="remove-photo" id="vf-remove-photo" onclick="removeVfPhoto()">✕ Supprimer</button>
+        <div id="vf-thumbs" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
       </div>
 
       <div class="form-grid">
@@ -1522,8 +1538,14 @@
           </select>
         </div>
         <div class="field">
-          <label>Prix de vente (GNF) *</label>
+          <label>Prix de vente *</label>
           <input type="number" id="vf-prix" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Devise</label>
+          <select id="vf-devise">
+            <option>GNF</option><option>USD</option><option>RMB</option><option>EUR</option>
+          </select>
         </div>
         <div class="field">
           <label>Quantité en stock *</label>
@@ -3041,24 +3063,121 @@ const statutColors = {
   transit:    { bg:'#DCE8FD', color:'#2B5EA0', label:'🚢 En transit' },
 };
 
+/* ── Outils véhicules ─────────────────────────────────────── */
+function vSansAccent(s){
+  return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function vMarque(v){
+  return ((v.marque || v.nom || '').trim().split(/\s+/)[0]) || '';
+}
+function vDrapeau(o){
+  const x = vSansAccent(o);
+  if(!x) return '';
+  if(x.includes('japon')) return '🇯🇵';
+  if(x.includes('core')) return '🇰🇷';
+  if(x.includes('chine')) return '🇨🇳';
+  if(x.includes('allemagne')) return '🇩🇪';
+  if(x.includes('europe')) return '🇪🇺';
+  if(x.includes('emirat')||x.includes('dubai')) return '🇦🇪';
+  if(x.includes('usa')||x.includes('etats')) return '🇺🇸';
+  if(x.includes('france')) return '🇫🇷';
+  if(x.includes('belgique')) return '🇧🇪';
+  return '🚢';
+}
+/* Taux indicatifs, uniquement pour comparer et totaliser.
+   À réajuster de temps en temps : ils dérivent. */
+const TAUX_GNF = { GNF:1, USD:8600, EUR:9400, RMB:1200 };
+function vPrixGNF(v){
+  const t = TAUX_GNF[v.devise || 'GNF'] || 1;
+  return (parseFloat(v.prix) || 0) * t;
+}
+function vPrix(v){
+  const d = v.devise || 'GNF';
+  return fmt(v.prix) + ' ' + d;
+}
+function vPhotos(v){
+  if(Array.isArray(v.photos) && v.photos.length) return v.photos;
+  if(typeof v.photosJson === 'string' && v.photosJson){
+    try{ const a = JSON.parse(v.photosJson); if(Array.isArray(a) && a.length) return a; }catch(e){}
+  }
+  return v.photo ? [v.photo] : [];
+}
+/* Compression : Firestore limite chaque fiche à 1 Mo.
+   Sans ça, cinq photos de téléphone dépassent et rien ne s'enregistre. */
+function vCompresser(file){
+  return new Promise(function(res, rej){
+    const fr = new FileReader();
+    fr.onload = function(e){
+      const img = new Image();
+      img.onload = function(){
+        const maxW = 800;
+        const k = Math.min(1, maxW / img.width);
+        const c = document.createElement('canvas');
+        c.width = img.width * k; c.height = img.height * k;
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        res(c.toDataURL('image/jpeg', 0.62));
+      };
+      img.onerror = rej;
+      img.src = e.target.result;
+    };
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+}
+
 function renderVoitures() {
   const search = (document.getElementById('voiture-search')?.value || '').toLowerCase();
   const carb   = document.getElementById('voiture-filtre-carb')?.value || '';
   const stk    = document.getElementById('voiture-filtre-stock')?.value || '';
 
+  const mq  = document.getElementById('voiture-filtre-marque')?.value || '';
+  const org = document.getElementById('voiture-filtre-origine')?.value || '';
+  const tri = document.getElementById('voiture-tri')?.value || 'recent';
+  const q   = vSansAccent(search);
+
   let list = voitures.filter(v => {
-    const matchSearch = !search || v.nom.toLowerCase().includes(search) || (v.couleur||'').toLowerCase().includes(search) || (v.annee||'').includes(search);
+    const foin = vSansAccent([v.nom, v.marque, v.modele, v.couleur, v.annee, v.carburant,
+                              v.boite, v.origine, v.type, v.desc].join(' '));
+    const matchSearch = !q || foin.includes(q);
     const matchCarb = !carb || v.carburant === carb;
     const matchStk = !stk || (stk==='dispo' ? v.stock > 0 : v.stock === 0);
-    return matchSearch && matchCarb && matchStk;
+    const matchMq  = !mq  || vMarque(v) === mq;
+    const matchOrg = !org || v.origine === org;
+    return matchSearch && matchCarb && matchStk && matchMq && matchOrg;
+  });
+
+  list.sort((a,b)=>{
+    switch(tri){
+      case 'ancien':     return (a.id||0) - (b.id||0);
+      case 'prix-asc':   return vPrixGNF(a) - vPrixGNF(b);
+      case 'prix-desc':  return vPrixGNF(b) - vPrixGNF(a);
+      case 'annee-desc': return (parseInt(b.annee)||0) - (parseInt(a.annee)||0);
+      default:           return (b.id||0) - (a.id||0);
+    }
+  });
+
+  // listes déroulantes alimentées par le stock réel
+  ['marque','origine'].forEach(function(champ){
+    const sel = document.getElementById('voiture-filtre-'+champ);
+    if(!sel) return;
+    const actuel = sel.value;
+    const vals = [...new Set(voitures.map(v => champ==='marque' ? vMarque(v) : (v.origine||'')).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="">Toutes ' + (champ==='marque' ? 'marques' : 'origines') + '</option>' +
+      vals.map(x => '<option value="'+x+'">' + (champ==='origine' ? vDrapeau(x)+' ' : '') + x + '</option>').join('');
+    if(vals.includes(actuel)) sel.value = actuel;
   });
 
   // Stats
   document.getElementById('v-stat-total').textContent = voitures.length;
   document.getElementById('v-stat-dispo').textContent = voitures.filter(v=>v.stock>0).length;
   document.getElementById('v-stat-rupture').textContent = voitures.filter(v=>v.stock===0).length;
-  const valeur = voitures.reduce((s,v)=>s+(parseFloat(v.prix)||0)*(parseInt(v.stock)||0),0);
-  document.getElementById('v-stat-valeur').textContent = fmt(valeur)+' GNF';
+  // On convertit tout en GNF : additionner des devises différentes donnerait
+  // un chiffre faux qui a l'air juste. Les vendus ne sont plus du stock.
+  const valeur = voitures
+    .filter(v => v.statut !== 'vendu')
+    .reduce((s,v)=> s + vPrixGNF(v) * (parseInt(v.stock)||0), 0);
+  const melange = new Set(voitures.map(v=>v.devise||'GNF')).size > 1;
+  document.getElementById('v-stat-valeur').textContent = (melange ? '≈ ' : '') + fmt(valeur) + ' GNF';
   document.getElementById('stat-stock').textContent = voitures.filter(v=>v.stock>0).length;
 
   const grid = document.getElementById('voiture-grid');
@@ -3069,8 +3188,10 @@ function renderVoitures() {
 
   grid.innerHTML = list.map(v => {
     const sc = statutColors[v.statut] || statutColors.disponible;
-    const imgHtml = v.photo
-      ? `<img src="${v.photo}" alt="${v.nom}" onerror="this.style.display='none'">`
+    const ph = vPhotos(v);
+    const imgHtml = ph.length
+      ? `<img src="${ph[0]}" alt="${v.nom}" onerror="this.style.display='none'">`
+        + (ph.length > 1 ? `<div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.72);color:#fff;font-size:11px;padding:3px 8px;border-radius:20px;">📷 ${ph.length}</div>` : '')
       : `<div class="voiture-img-placeholder">🚗</div>`;
     const stockColor = v.stock > 2 ? 'var(--vert)' : v.stock > 0 ? '#E8A020' : 'var(--rouge)';
     return `<div class="voiture-card" onclick="openVoitureDetail(${v.id})">
@@ -3081,8 +3202,8 @@ function renderVoitures() {
       </div>
       <div class="voiture-info">
         <div class="voiture-nom">${v.nom}</div>
-        <div class="voiture-annee">Année ${v.annee||'—'} · ${v.origine||''}</div>
-        <div class="voiture-prix">${fmt(v.prix)} GNF</div>
+        <div class="voiture-annee">Année ${v.annee||'—'} · ${v.origine ? vDrapeau(v.origine)+' '+v.origine : ''}</div>
+        <div class="voiture-prix">${vPrix(v)}</div>
         <div class="voiture-specs">
           ${v.carburant ? `<span class="voiture-spec">⛽ ${v.carburant}</span>` : ''}
           ${v.boite ? `<span class="voiture-spec">⚙️ ${v.boite}</span>` : ''}
@@ -3105,12 +3226,62 @@ function renderVoitures() {
   }).join('');
 }
 
+function vdPhoto(pas, index){
+  const ph = window._vdPhotos || [];
+  if(!ph.length) return;
+  window._vdIdx = (typeof index === 'number')
+    ? index
+    : (window._vdIdx + pas + ph.length) % ph.length;
+  const img = document.getElementById('vd-img');
+  if(img) img.src = ph[window._vdIdx];
+  const c = document.getElementById('vd-compteur');
+  if(c) c.textContent = (window._vdIdx + 1) + ' / ' + ph.length;
+  document.querySelectorAll('.vd-mini').forEach(function(m, i){
+    m.style.borderColor = (i === window._vdIdx) ? 'var(--or)' : 'transparent';
+  });
+}
+
+/* Envoie la fiche à un client par WhatsApp, avec le prix et la référence */
+function envoyerOffreVoiture(id){
+  const v = voitures.find(x=>x.id===id);
+  if(!v) return;
+  const dispo = v.statut === 'transit' ? 'En transit — réservable avant arrivée'
+              : v.statut === 'reserve' ? 'Réservé'
+              : v.statut === 'vendu'   ? 'Vendu'
+              : (v.stock > 0 ? 'Disponible' : 'Rupture de stock');
+  const txt =
+    'Bonjour 👋\n\nVoici le véhicule proposé par Africa Vision Multiservices :\n\n'
+    + '🚗 ' + v.nom + (v.annee ? ' — ' + v.annee : '') + '\n'
+    + '💰 ' + vPrix(v) + '\n'
+    + (v.km ? '🛣️ ' + v.km + '\n' : '')
+    + (v.carburant ? '⛽ ' + v.carburant + (v.boite ? ' · ' + v.boite : '') + '\n' : '')
+    + (v.couleur ? '🎨 ' + v.couleur + '\n' : '')
+    + (v.origine ? vDrapeau(v.origine) + ' Origine : ' + v.origine + '\n' : '')
+    + '📦 ' + dispo + '\n\n'
+    + 'Souhaitez-vous que je vous envoie les photos ?\n\n'
+    + '📞 +224 625 81 36 46 · +224 612 39 83 18\n🌐 africavisioncargo.com';
+  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+}
+
 function openVoitureDetail(id) {
   const v = voitures.find(x=>x.id===id);
   if (!v) return;
   const sc = statutColors[v.statut] || statutColors.disponible;
-  const imgHtml = v.photo
-    ? `<img src="${v.photo}" alt="${v.nom}" style="width:100%;height:280px;object-fit:cover;display:block;">`
+  window._vdPhotos = vPhotos(v);
+  window._vdIdx = 0;
+  const nph = window._vdPhotos.length;
+  const imgHtml = nph
+    ? `<div style="position:relative;background:#111;">
+         <img id="vd-img" src="${window._vdPhotos[0]}" alt="${v.nom}" style="width:100%;height:280px;object-fit:cover;display:block;">
+         ${nph > 1 ? `
+           <button onclick="vdPhoto(-1)" title="Photo précédente" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);color:#fff;border:0;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;">‹</button>
+           <button onclick="vdPhoto(1)" title="Photo suivante" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);color:#fff;border:0;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;">›</button>
+           <div id="vd-compteur" style="position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,.72);color:#fff;font-size:12px;padding:3px 10px;border-radius:20px;">1 / ${nph}</div>
+         ` : ''}
+       </div>
+       ${nph > 1 ? `<div style="display:flex;gap:6px;padding:10px 28px 0;flex-wrap:wrap;">`
+         + window._vdPhotos.map((p,i)=>`<img src="${p}" onclick="vdPhoto(0,${i})" style="width:56px;height:42px;object-fit:cover;border-radius:4px;cursor:pointer;border:2px solid transparent" class="vd-mini">`).join('')
+         + `</div>` : ''}`
     : `<div style="height:200px;background:linear-gradient(135deg,#1a1a1a,#333);display:flex;align-items:center;justify-content:center;font-size:80px;">🚗</div>`;
 
   document.getElementById('voiture-detail-title').textContent = `${v.nom} (${v.annee||'—'})`;
@@ -3120,10 +3291,10 @@ function openVoitureDetail(id) {
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
         <div>
           <div style="font-size:22px;font-weight:800;">${v.nom}</div>
-          <div style="font-size:14px;color:var(--gris);margin-top:2px;">Année ${v.annee||'—'} · ${v.type||''} · ${v.origine||''}</div>
+          <div style="font-size:14px;color:var(--gris);margin-top:2px;">Année ${v.annee||'—'} · ${v.type||''} · ${v.origine ? vDrapeau(v.origine)+' '+v.origine : ''}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:26px;font-weight:800;color:var(--or)">${fmt(v.prix)} GNF</div>
+          <div style="font-size:26px;font-weight:800;color:var(--or)">${vPrix(v)}</div>
           <div style="display:inline-block;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:800;background:${sc.bg};color:${sc.color};margin-top:4px;">${sc.label}</div>
         </div>
       </div>
@@ -3144,6 +3315,7 @@ function openVoitureDetail(id) {
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
         <button class="btn btn-outline" onclick="editVoiture(${v.id});closeVoitureDetail()">✏️ Modifier</button>
+        <button class="btn btn-outline" onclick="envoyerOffreVoiture(${v.id})">📲 Envoyer l'offre au client</button>
         <button class="btn btn-danger btn-sm" onclick="deleteVoiture(${v.id})">🗑 Supprimer</button>
       </div>
     </div>`;
@@ -3177,19 +3349,10 @@ function openVoitureModal(v=null) {
   document.getElementById('vf-origine').value = v?.origine || 'Chine';
   document.getElementById('vf-statut').value = v?.statut || 'disponible';
   document.getElementById('vf-type').value = v?.type || 'Neuf';
-  // photo
-  window._vfPhoto = v?.photo || null;
-  const thumb = document.getElementById('vf-photo-thumb');
-  const icon = document.getElementById('vf-upload-icon');
-  const txt = document.getElementById('vf-upload-txt');
-  const rmBtn = document.getElementById('vf-remove-photo');
-  if (v?.photo) {
-    thumb.src = v.photo; thumb.classList.add('visible');
-    icon.style.display='none'; txt.style.display='none'; rmBtn.classList.add('visible');
-  } else {
-    thumb.src=''; thumb.classList.remove('visible');
-    icon.style.display=''; txt.style.display=''; rmBtn.classList.remove('visible');
-  }
+  document.getElementById('vf-devise').value = v?.devise || 'GNF';
+  // photos
+  window._vfPhotos = v ? vPhotos(v).slice(0, 5) : [];
+  renderVfThumbs();
   document.getElementById('voiture-form-overlay').classList.add('open');
   showReturnBtn();
 }
@@ -3203,30 +3366,50 @@ function closeVoitureForm() {
   document.getElementById('voiture-form-overlay').classList.remove('open');
 }
 
-function loadVfPhoto(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 5*1024*1024) { showToast('⚠️ Photo trop lourde (max 5 Mo)'); return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    window._vfPhoto = e.target.result;
-    const thumb = document.getElementById('vf-photo-thumb');
-    thumb.src = e.target.result; thumb.classList.add('visible');
-    document.getElementById('vf-upload-icon').style.display='none';
-    document.getElementById('vf-upload-txt').style.display='none';
-    document.getElementById('vf-remove-photo').classList.add('visible');
-  };
-  reader.readAsDataURL(file);
+const VF_MAX_PHOTOS = 5;
+
+async function loadVfPhoto(input) {
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+  window._vfPhotos = window._vfPhotos || [];
+  const place = VF_MAX_PHOTOS - window._vfPhotos.length;
+  if (place <= 0) { showToast('⚠️ Limite de 5 photos atteinte'); input.value=''; return; }
+  for (const f of files.slice(0, place)) {
+    try { window._vfPhotos.push(await vCompresser(f)); }
+    catch(e) { showToast('⚠️ Photo illisible : ' + f.name); }
+  }
+  if (files.length > place) showToast('⚠️ Seules les ' + place + ' premières photos ont été gardées');
+  input.value = '';
+  renderVfThumbs();
 }
 
-function removeVfPhoto() {
-  window._vfPhoto = null;
-  const thumb = document.getElementById('vf-photo-thumb');
-  thumb.src=''; thumb.classList.remove('visible');
-  document.getElementById('vf-upload-icon').style.display='';
-  document.getElementById('vf-upload-txt').style.display='';
-  document.getElementById('vf-remove-photo').classList.remove('visible');
-  document.getElementById('vf-photo-input').value='';
+function removeVfPhoto(i) {
+  window._vfPhotos = window._vfPhotos || [];
+  if (typeof i === 'number') window._vfPhotos.splice(i, 1);
+  else window._vfPhotos = [];
+  renderVfThumbs();
+}
+
+function renderVfThumbs() {
+  const ph = window._vfPhotos = window._vfPhotos || [];
+  window._vfPhoto = ph[0] || null;
+  const zone = document.getElementById('vf-thumbs');
+  const cpt  = document.getElementById('vf-photo-count');
+  const icon = document.getElementById('vf-upload-icon');
+  const txt  = document.getElementById('vf-upload-txt');
+  const thumb= document.getElementById('vf-photo-thumb');
+  if (cpt) cpt.textContent = '(' + ph.length + '/' + VF_MAX_PHOTOS + ')';
+  if (thumb) { thumb.src=''; thumb.classList.remove('visible'); }
+  if (icon) icon.style.display = ph.length ? 'none' : '';
+  if (txt)  txt.style.display  = ph.length ? 'none' : '';
+  if (!zone) return;
+  zone.innerHTML = ph.map(function(p, i){
+    return '<div style="position:relative;width:72px;height:56px;border-radius:6px;overflow:hidden;border:1px solid var(--gris-clair)">'
+      + '<img src="' + p + '" style="width:100%;height:100%;object-fit:cover">'
+      + (i===0 ? '<span style="position:absolute;left:0;bottom:0;background:var(--or);color:#000;font-size:9px;padding:1px 4px">1re</span>' : '')
+      + '<button onclick="removeVfPhoto(' + i + ')" title="Retirer" style="position:absolute;top:0;right:0;background:rgba(0,0,0,.7);color:#fff;border:0;width:18px;height:18px;line-height:18px;padding:0;cursor:pointer;font-size:11px">✕</button>'
+      + '</div>';
+  }).join('');
 }
 
 function saveVoiture() {
@@ -3248,8 +3431,16 @@ function saveVoiture() {
     statut: document.getElementById('vf-statut').value,
     type: document.getElementById('vf-type').value,
     desc: document.getElementById('vf-desc').value,
-    photo: window._vfPhoto || null,
+    devise: document.getElementById('vf-devise').value,
+    photos: (window._vfPhotos || []).slice(0, 5),
+    photo: (window._vfPhotos && window._vfPhotos[0]) || null,
   };
+
+  // Firestore refuse une fiche de plus de 1 Mo : on prévient avant d'enregistrer
+  if (JSON.stringify(data).length > 900000) {
+    showToast('⚠️ Fiche trop lourde — retirez une ou deux photos');
+    return;
+  }
 
   if (editId) {
     const idx = voitures.findIndex(v=>v.id==editId);
@@ -3300,8 +3491,20 @@ function creerProformaVoiture(id) {
 }
 
 function partagerVoitureWA(v) {
-  const msg = `🚗 *AFRICA VISION MULTISERVICES*\n🏷️ *Véhicule disponible*\n━━━━━━━━━━━━━━━━━━\n*${v.nom}* — Année ${v.annee||'—'}\n💰 Prix : *${fmt(v.prix)} GNF*\n⛽ ${v.carburant||''} | ⚙️ ${v.boite||''} | 🎨 ${v.couleur||''}\n📦 Stock : ${v.stock} unité(s)\n━━━━━━━━━━━━━━━━━━\n📞 +224 625 81 36 46\n🌐 africavisioncargo.com\n📍 Madina – Sonfonia, Conakry`;
-  window.open(`https://wa.me/224625813646?text=${encodeURIComponent(msg)}`, '_blank');
+  const ph = vPhotos(v);
+  const msg = `🚗 *AFRICA VISION MULTISERVICES*\n🏷️ *Véhicule disponible*\n━━━━━━━━━━━━━━━━━━\n`
+    + `*${v.nom}* — Année ${v.annee||'—'}\n`
+    + `💰 Prix : *${vPrix(v)}*\n`
+    + `⛽ ${v.carburant||''} | ⚙️ ${v.boite||''} | 🎨 ${v.couleur||''}\n`
+    + (v.origine ? `${vDrapeau(v.origine)} Origine : ${v.origine}\n` : '')
+    + (ph.length > 1 ? `📷 ${ph.length} photos disponibles\n` : '')
+    + `📦 ${v.statut === 'transit' ? 'En transit — réservable avant arrivée'
+          : v.stock > 0 ? v.stock + ' unité(s) en stock' : 'Rupture de stock'}\n`
+    + `━━━━━━━━━━━━━━━━━━\n`
+    + `📞 +224 625 81 36 46\n📞 +224 612 39 83 18\n`
+    + `🌐 africavisioncargo.com\n📍 Madina – Sonfonia T7, Conakry`;
+  // Pas de numéro dans le lien : WhatsApp laisse choisir le client destinataire
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 // ══ CLIENTS ══
@@ -3746,6 +3949,8 @@ async function avFbLoadAll(silent) {
         if(v.prix) v.prix=Number(v.prix);
         if(v.stock!==undefined) v.stock=Number(v.stock);
         if(v.id) v.id=Number(v.id);
+        v.photos = vPhotos(v);          // photosJson -> tableau
+        if(!v.devise) v.devise = 'GNF';
       });
       voitures = rawVoit;
     }
@@ -3796,7 +4001,15 @@ window._avSaveVoit = async function() {
       var v = voitures[i];
       var id = v._id || ('v'+v.id);
       v._id = id;
-      await fbPut('voitures', id, v);
+      // On envoie les photos sous forme de texte JSON (champ lu par la vitrine)
+      // et on garde "photo" pour la compatibilité avec l'ancienne vitrine.
+      var d = Object.assign({}, v);
+      var ph = vPhotos(v);
+      d.photosJson = JSON.stringify(ph);
+      d.photo = ph[0] || '';
+      d.marque = vMarque(v);
+      delete d.photos;
+      await fbPut('voitures', id, d);
     }
   } catch(e) { console.log('saveVoit:', e); }
 };
