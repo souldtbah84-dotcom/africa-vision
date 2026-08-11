@@ -3110,12 +3110,12 @@ function vCompresser(file){
     fr.onload = function(e){
       const img = new Image();
       img.onload = function(){
-        const maxW = 800;
+        const maxW = 760;
         const k = Math.min(1, maxW / img.width);
         const c = document.createElement('canvas');
         c.width = img.width * k; c.height = img.height * k;
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        res(c.toDataURL('image/jpeg', 0.62));
+        res(c.toDataURL('image/jpeg', 0.58));
       };
       img.onerror = rej;
       img.src = e.target.result;
@@ -3381,6 +3381,8 @@ async function loadVfPhoto(input) {
   if (files.length > place) showToast('⚠️ Seules les ' + place + ' premières photos ont été gardées');
   input.value = '';
   renderVfThumbs();
+  const total = (window._vfPhotos || []).reduce((s,p)=>s+p.length, 0);
+  showToast('📷 ' + window._vfPhotos.length + ' photo(s) · ' + Math.round(total/1024) + ' Ko sur 1000 Ko');
 }
 
 function removeVfPhoto(i) {
@@ -3436,9 +3438,14 @@ function saveVoiture() {
     photo: (window._vfPhotos && window._vfPhotos[0]) || null,
   };
 
-  // Firestore refuse une fiche de plus de 1 Mo : on prévient avant d'enregistrer
-  if (JSON.stringify(data).length > 900000) {
-    showToast('⚠️ Fiche trop lourde — retirez une ou deux photos');
+  // Firestore refuse un document de plus de 1 Mo.
+  // On mesure le document réellement envoyé, pas l'objet local : celui-ci
+  // contient à la fois "photos" et "photo", donc la 1re photo compte double.
+  const poids = JSON.stringify(_avVoitPourFb(data)).length;
+  if (poids > 1000000) {
+    alert("Cette fiche pèse " + Math.round(poids/1024) + " Ko, au-delà de la limite de 1000 Ko.\n\n"
+        + data.photos.length + " photo(s) jointe(s).\n\n"
+        + "Retirez une photo et réessayez.");
     return;
   }
 
@@ -3465,7 +3472,10 @@ function saveVoiture() {
     const cible = voitures.find(x => x.id == (editId || data.id)) || data;
     const err = await window._avSaveVoitUne(cible);
     if (err) {
-      showToast('❌ Non enregistré en ligne : ' + err);
+      showToast('❌ Non publié : ' + err);
+      alert("Le véhicule est enregistré sur cet appareil, mais il n'a PAS été "
+          + "publié en ligne.\n\nRaison : " + err
+          + "\n\nIl n'apparaîtra donc pas sur la vitrine tant que ce n'est pas réglé.");
       return;
     }
     try { localStorage.setItem('av_voitures', JSON.stringify(voitures)); } catch(e) {}
@@ -3473,14 +3483,29 @@ function saveVoiture() {
   })();
 }
 
-function deleteVoiture(id) {
-  if (!confirm('Supprimer ce véhicule du stock ?')) return;
-  voitures = voitures.filter(v=>v.id!==id);
-  try { localStorage.setItem('av_voitures',JSON.stringify(voitures)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
-  if(window._avFbOn)window._avSaveVoit();
+async function deleteVoiture(id) {
+  const cible = voitures.find(v => v.id === id);
+  if (!cible) return;
+  if (!confirm('Supprimer « ' + (cible.nom || 'ce véhicule') + ' » du stock ?')) return;
+
+  // On supprime d'ABORD dans Firestore. Sinon le document y reste et
+  // le véhicule réapparaît à la synchronisation suivante.
+  if (window._avFbOn) {
+    showToast('⏳ Suppression en cours…');
+    const err = await window._avDeleteVoitUne(cible);
+    if (err) {
+      alert("Le véhicule n'a PAS pu être supprimé en ligne.\n\nRaison : " + err
+          + "\n\nIl est toujours présent sur la vitrine. Réessayez.");
+      return;
+    }
+  }
+
+  voitures = voitures.filter(v => v.id !== id);
+  try { localStorage.setItem('av_voitures', JSON.stringify(voitures)); } catch(qe) {}
   closeVoitureDetail();
   renderVoitures();
-  showToast('🗑 Véhicule supprimé');
+  showToast(window._avFbOn ? '🗑 Supprimé du stock et de la vitrine'
+                           : '🗑 Supprimé sur cet appareil seulement');
 }
 
 function creerProformaVoiture(id) {
@@ -3936,7 +3961,9 @@ async function fbPut(col, id, data) {
 
 async function fbDel(col, id) {
   var url = FB_BASE + col + '/' + id + '?key=' + _avFbKey;
-  await fetchWithTimeout(url, {method:'DELETE'}, 5000);
+  var r = await fetchWithTimeout(url, {method:'DELETE'}, 5000);
+  // Sans ce contrôle, un refus du serveur passait pour une suppression réussie
+  if (r && !r.ok && r.status !== 404) throw new Error('suppression refusée (code ' + r.status + ')');
 }
 
 async function avFbLoadAll(silent) {
@@ -3947,6 +3974,9 @@ async function avFbLoadAll(silent) {
   try {
     var rawDocs = await fbGetAll('documents');
     var rawVoit = await fbGetAll('voitures');
+    // La lecture a réussi : la connexion est établie. On le note ICI, avant
+    // la reprise des véhicules en attente — sinon elle échouait toujours.
+    window._avFbOn = true;
     // Firebase is the source of truth - always replace local
     documents = rawDocs;
     // Sur certains navigateurs (Safari/iPhone notamment), le stockage local
@@ -4062,6 +4092,18 @@ window._avSaveVoitUne = async function(v) {
   }
 };
 
+/* Supprime UNE fiche dans Firestore. Renvoie null si tout va bien. */
+window._avDeleteVoitUne = async function(v) {
+  if (!window._avFbOn) return 'Firebase non connecté';
+  try {
+    var id = v._id || ('v' + v.id);
+    await fbDel('voitures', id);
+    return null;
+  } catch(e) {
+    return e.message || 'erreur réseau';
+  }
+};
+
 /* Écrit toutes les fiches. Une fiche en échec n'interrompt plus les autres. */
 window._avSaveVoit = async function() {
   if (!window._avFbOn) return;
@@ -4159,10 +4201,19 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('avlogin').style.display='flex';
   }
 
-  // Auto-sync every 3 minutes
-  setInterval(function(){
-    if(window._avFbOn) avFbLoadAll(true);
-  }, 180000);
+  // La lecture Firestore ne demande pas de session : on se connecte tout de
+  // suite, sans attendre. Avant, il fallait appuyer sur « Synchroniser ».
+  setTimeout(function(){ if(!window._avFbOn) avFbLoadAll(true); }, 400);
+
+  // Puis toutes les 60 secondes au lieu de 3 minutes, et on retente même
+  // si la connexion a échoué au démarrage.
+  setInterval(function(){ avFbLoadAll(true); }, 60000);
+
+  // Et dès que le réseau revient, ou que l'on rouvre l'onglet
+  window.addEventListener('online', function(){ avFbLoadAll(true); });
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden) avFbLoadAll(true);
+  });
 });
 
 // ── MOBILE MENU ──
