@@ -3454,8 +3454,23 @@ function saveVoiture() {
   try { localStorage.setItem('av_voitures',JSON.stringify(voitures)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
   closeVoitureForm();
   renderVoitures();
-  // Save to Firebase in background
-  if(window._avFbOn && window._avSaveVoit) window._avSaveVoit();
+
+  // On enregistre d'abord CETTE fiche, et on le dit si ça échoue.
+  // Avant, une ancienne fiche en erreur bloquait toutes les suivantes.
+  (async function(){
+    if (!window._avFbOn) {
+      showToast('⚠️ Firebase non connecté — véhicule enregistré sur cet appareil seulement');
+      return;
+    }
+    const cible = voitures.find(x => x.id == (editId || data.id)) || data;
+    const err = await window._avSaveVoitUne(cible);
+    if (err) {
+      showToast('❌ Non enregistré en ligne : ' + err);
+      return;
+    }
+    try { localStorage.setItem('av_voitures', JSON.stringify(voitures)); } catch(e) {}
+    showToast('☁️ Enregistré et publié sur la vitrine');
+  })();
 }
 
 function deleteVoiture(id) {
@@ -3952,7 +3967,31 @@ async function avFbLoadAll(silent) {
         v.photos = vPhotos(v);          // photosJson -> tableau
         if(!v.devise) v.devise = 'GNF';
       });
-      voitures = rawVoit;
+      // Firebase fait référence, MAIS on ne jette pas les véhicules saisis
+      // ici qui n'ont pas encore réussi à partir : ils seraient perdus.
+      var idsFb = {};
+      rawVoit.forEach(function(v){ if(v.id) idsFb[String(v.id)] = true; });
+      var enAttente = (voitures || []).filter(function(v){
+        return v && v.id && !idsFb[String(v.id)];
+      });
+      voitures = rawVoit.concat(enAttente);
+      try { localStorage.setItem('av_voitures', JSON.stringify(voitures)); } catch(e) {}
+      if (enAttente.length) {
+        showToast('⚠️ ' + enAttente.length + ' véhicule(s) pas encore publié(s) — nouvelle tentative…');
+        (async function(){
+          var restants = [];
+          for (var j = 0; j < enAttente.length; j++) {
+            var err = await window._avSaveVoitUne(enAttente[j]);
+            if (err) restants.push(enAttente[j].nom + ' : ' + err);
+          }
+          if (restants.length) {
+            console.log('Toujours non publiés :', restants);
+            showToast('❌ ' + restants.join(' | '));
+          } else {
+            showToast('☁️ Véhicules en attente publiés');
+          }
+        })();
+      }
     }
     window._avFbOn = true;
     setBtnOk();
@@ -3994,24 +4033,48 @@ window._avSaveDocs = async function() {
   } catch(e) { console.log('saveDocs error:', e); }
 };
 
+/* Prépare une fiche pour Firestore.
+   photosJson n'est écrit que s'il y a plusieurs photos : sinon on
+   dupliquerait la photo dans le même document et on dépasserait le 1 Mo. */
+function _avVoitPourFb(v) {
+  var d = Object.assign({}, v);
+  var ph = vPhotos(v);
+  d.photo = ph[0] || '';
+  d.photosJson = ph.length > 1 ? JSON.stringify(ph) : '';
+  d.marque = vMarque(v);
+  delete d.photos;
+  return d;
+}
+
+/* Écrit UNE fiche. Renvoie null si tout va bien, un message sinon. */
+window._avSaveVoitUne = async function(v) {
+  if (!window._avFbOn) return 'Firebase non connecté';
+  try {
+    var id = v._id || ('v' + v.id);
+    v._id = id;
+    var d = _avVoitPourFb(v);
+    if (JSON.stringify(d).length > 950000)
+      return 'fiche trop lourde (' + Math.round(JSON.stringify(d).length/1024) + ' Ko) — retirez des photos';
+    await fbPut('voitures', id, d);
+    return null;
+  } catch(e) {
+    return e.message || 'erreur réseau';
+  }
+};
+
+/* Écrit toutes les fiches. Une fiche en échec n'interrompt plus les autres. */
 window._avSaveVoit = async function() {
   if (!window._avFbOn) return;
-  try {
-    for (var i=0; i<voitures.length; i++) {
-      var v = voitures[i];
-      var id = v._id || ('v'+v.id);
-      v._id = id;
-      // On envoie les photos sous forme de texte JSON (champ lu par la vitrine)
-      // et on garde "photo" pour la compatibilité avec l'ancienne vitrine.
-      var d = Object.assign({}, v);
-      var ph = vPhotos(v);
-      d.photosJson = JSON.stringify(ph);
-      d.photo = ph[0] || '';
-      d.marque = vMarque(v);
-      delete d.photos;
-      await fbPut('voitures', id, d);
-    }
-  } catch(e) { console.log('saveVoit:', e); }
+  var echecs = [];
+  for (var i = 0; i < voitures.length; i++) {
+    var err = await window._avSaveVoitUne(voitures[i]);
+    if (err) echecs.push((voitures[i].nom || 'fiche ' + i) + ' : ' + err);
+  }
+  if (echecs.length) {
+    console.log('Fiches non enregistrées :', echecs);
+    showToast('⚠️ ' + echecs.length + ' fiche(s) non enregistrée(s) — voir la console');
+  }
+  return echecs;
 };
 
 async function deleteDocFromFb(id) {
