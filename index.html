@@ -487,6 +487,9 @@
     <button class="nav-btn" onclick="showPage('douane');clearDouaneForm();">
       <span class="icon">🛃</span> Frais de Douane
     </button>
+    <button class="nav-btn" onclick="showPage('transit');clearTransitForm();">
+      <span class="icon">🚢</span> Frais de Transit
+    </button>
     <button class="nav-btn" onclick="showPage('liste')">
       <span class="icon">📁</span> Tous les documents
     </button>
@@ -1257,6 +1260,229 @@
     </div>
   </div>
 
+
+  <!-- ══════ PAGE: FRAIS DE TRANSIT ══════ -->
+  <div class="page" id="page-transit">
+    <div class="form-card">
+      <div class="form-header">
+        <h2>🚢 Nouveaux Frais de Transit</h2>
+        <span style="font-size:12px;color:#aaa;">Dédouanement portuaire — sans TVA</span>
+      </div>
+      <div class="form-body">
+
+        <div class="form-grid">
+          <div class="field">
+            <label>Numéro de facture</label>
+            <input type="text" id="tr-num" value="" placeholder="TRS-2026-001">
+          </div>
+          <div class="field">
+            <label>Date d'émission</label>
+            <input type="date" id="tr-date">
+          </div>
+          <div class="field">
+            <label>N° conteneur / BL</label>
+            <input type="text" id="tr-conteneur" placeholder="Ex: MSCU 1234567">
+          </div>
+          <div class="field">
+            <label>Compagnie maritime</label>
+            <input type="text" id="tr-compagnie" placeholder="Ex: MSC, Maersk, CMA CGM...">
+          </div>
+          <div class="field">
+            <label>Navire / Voyage</label>
+            <input type="text" id="tr-navire" placeholder="Ex: MSC ANNA / 425W">
+          </div>
+          <div class="field">
+            <label>Réf. document lié (optionnel)</label>
+            <input type="text" id="tr-ref-pf" placeholder="DOU-2026-001 / PRO-2026-001">
+          </div>
+        </div>
+
+        <hr class="separator">
+        <div class="form-grid">
+          <div class="field">
+            <label>Nom du client</label>
+            <input type="text" id="tr-client" placeholder="Nom complet">
+          </div>
+          <div class="field">
+            <label>Téléphone</label>
+            <input type="text" id="tr-tel" placeholder="+224 6XX XXX XXX">
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="tr-email" placeholder="client@email.com">
+          </div>
+          <div class="field">
+            <label>Adresse / Quartier</label>
+            <input type="text" id="tr-adresse" placeholder="Conakry, Kaloum...">
+          </div>
+        </div>
+
+        <hr class="separator">
+        <div class="form-grid-3">
+          <div class="field">
+            <label>Devise de saisie</label>
+            <select id="tr-devise" onchange="calcTransit()">
+              <option value="USD">USD ($)</option>
+              <option value="GNF">GNF</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Taux de change (1 USD = ? GNF)</label>
+            <input type="number" id="tr-taux" value="8700" min="0" step="1" oninput="calcTransit()">
+          </div>
+          <div class="field">
+            <label>Total en devise</label>
+            <input type="text" id="tr-sub" value="0 $" readonly style="background:#f6f9fb;font-weight:700;">
+          </div>
+        </div>
+
+        <hr class="separator">
+        <div class="articles-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+            <h3>🚢 Détail des frais de transit</h3>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline btn-sm" onclick="addTransitRow()">+ Ajouter un poste</button>
+              <button class="btn btn-outline btn-sm" onclick="resetTransitRows()">↺ Liste standard</button>
+            </div>
+          </div>
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width:6%">✓</th>
+                <th style="width:44%">Poste de transit</th>
+                <th style="width:20%">Montant <span id="tr-devise-lbl">(USD)</span></th>
+                <th style="width:24%">Total GNF</th>
+                <th style="width:3%"></th>
+              </tr>
+            </thead>
+            <tbody id="tr-items">
+              <tr>
+                <td style="text-align:center"><input type="checkbox" class="tr-chk" checked oninput="calcTransit()" onchange="calcTransit()"></td>
+                <td><input type="text" class="tr-lbl" value="CTN"></td>
+                <td><input type="number" class="tr-amt" value="0" min="0" step="0.01" oninput="calcTransit()"></td>
+                <td class="row-total tr-gnf">0</td>
+                <td><button class="remove-row" onclick="removeTransitRow(this)">×</button></td>
+              </tr>
+              <tr>
+                <td style="text-align:center"><input type="checkbox" class="tr-chk" checked oninput="calcTransit()" onchange="calcTransit()"></td>
+                <td><input type="text" class="tr-lbl" value="Delivery Order MSC"></td>
+                <td><input type="number" class="tr-amt" value="0" min="0" step="0.01" oninput="calcTransit()"></td>
+                <td class="row-total tr-gnf">0</td>
+                <td><button class="remove-row" onclick="removeTransitRow(this)">×</button></td>
+              </tr>
+              <tr>
+                <td style="text-align:center"><input type="checkbox" class="tr-chk" checked oninput="calcTransit()" onchange="calcTransit()"></td>
+                <td><input type="text" class="tr-lbl" value="Coordinating fees"></td>
+                <td><input type="number" class="tr-amt" value="0" min="0" step="0.01" oninput="calcTransit()"></td>
+                <td class="row-total tr-gnf">0</td>
+                <td><button class="remove-row" onclick="removeTransitRow(this)">×</button></td>
+              </tr>
+              <tr>
+                <td style="text-align:center"><input type="checkbox" class="tr-chk" checked oninput="calcTransit()" onchange="calcTransit()"></td>
+                <td><input type="text" class="tr-lbl" value="Tracker"></td>
+                <td><input type="number" class="tr-amt" value="0" min="0" step="0.01" oninput="calcTransit()"></td>
+                <td class="row-total tr-gnf">0</td>
+                <td><button class="remove-row" onclick="removeTransitRow(this)">×</button></td>
+              </tr>
+              <tr>
+                <td style="text-align:center"><input type="checkbox" class="tr-chk" checked oninput="calcTransit()" onchange="calcTransit()"></td>
+                <td><input type="text" class="tr-lbl" value="Handling charges"></td>
+                <td><input type="number" class="tr-amt" value="0" min="0" step="0.01" oninput="calcTransit()"></td>
+                <td class="row-total tr-gnf">0</td>
+                <td><button class="remove-row" onclick="removeTransitRow(this)">×</button></td>
+              </tr>
+              <tr>
+                <td style="text-align:center"><input type="checkbox" class="tr-chk" checked oninput="calcTransit()" onchange="calcTransit()"></td>
+                <td><input type="text" class="tr-lbl" value="Police clearance"></td>
+                <td><input type="number" class="tr-amt" value="0" min="0" step="0.01" oninput="calcTransit()"></td>
+                <td class="row-total tr-gnf">0</td>
+                <td><button class="remove-row" onclick="removeTransitRow(this)">×</button></td>
+              </tr>
+              <tr>
+                <td style="text-align:center"><input type="checkbox" class="tr-chk" checked oninput="calcTransit()" onchange="calcTransit()"></td>
+                <td><input type="text" class="tr-lbl" value="Ecowas / CEDEAO"></td>
+                <td><input type="number" class="tr-amt" value="0" min="0" step="0.01" oninput="calcTransit()"></td>
+                <td class="row-total tr-gnf">0</td>
+                <td><button class="remove-row" onclick="removeTransitRow(this)">×</button></td>
+              </tr>
+              <tr>
+                <td style="text-align:center"><input type="checkbox" class="tr-chk" checked oninput="calcTransit()" onchange="calcTransit()"></td>
+                <td><input type="text" class="tr-lbl" value="Document"></td>
+                <td><input type="number" class="tr-amt" value="0" min="0" step="0.01" oninput="calcTransit()"></td>
+                <td class="row-total tr-gnf">0</td>
+                <td><button class="remove-row" onclick="removeTransitRow(this)">×</button></td>
+              </tr>
+              <tr>
+                <td style="text-align:center"><input type="checkbox" class="tr-chk" checked oninput="calcTransit()" onchange="calcTransit()"></td>
+                <td><input type="text" class="tr-lbl" value="Escort"></td>
+                <td><input type="number" class="tr-amt" value="0" min="0" step="0.01" oninput="calcTransit()"></td>
+                <td class="row-total tr-gnf">0</td>
+                <td><button class="remove-row" onclick="removeTransitRow(this)">×</button></td>
+              </tr>
+              <tr>
+                <td style="text-align:center"><input type="checkbox" class="tr-chk" checked oninput="calcTransit()" onchange="calcTransit()"></td>
+                <td><input type="text" class="tr-lbl" value="Administration"></td>
+                <td><input type="number" class="tr-amt" value="0" min="0" step="0.01" oninput="calcTransit()"></td>
+                <td class="row-total tr-gnf">0</td>
+                <td><button class="remove-row" onclick="removeTransitRow(this)">×</button></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="totals-box">
+            <div class="totals-inner">
+              <div class="total-row grand"><span>TOTAL FRAIS DE TRANSIT</span><span id="tr-total">0 GNF</span></div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="separator">
+        <div class="form-grid">
+          <div class="field">
+            <label>Montant versé (GNF)</label>
+            <input type="number" id="tr-verse" value="0" min="0" oninput="calcPaiementTransit()">
+          </div>
+          <div class="field">
+            <label>Reste à payer</label>
+            <input type="text" id="tr-reste" value="0 GNF" readonly style="background:#f7f7f7;font-weight:700;">
+          </div>
+          <div class="field">
+            <label>Statut du paiement</label>
+            <div id="tr-paiement-badge" style="padding:10px 14px;border-radius:8px;background:#eee;color:#888;font-weight:700;font-size:13px;text-align:center;">— Aucun montant —</div>
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <button class="btn btn-outline" onclick="soldeTransit()">✅ Marquer comme soldé</button>
+          </div>
+        </div>
+
+        <hr class="separator">
+        <div class="form-grid">
+          <div class="field">
+            <label>📷 Photo (conteneur / documents)</label>
+            <label for="tr-photo-input" class="photo-upload-zone" style="cursor:pointer;display:block;">
+              <input type="file" id="tr-photo-input" accept="image/*" style="display:none" onchange="loadPhoto(this,'tr')">
+              <div class="upload-icon">🖼️</div>
+              <p>Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb;">JPG, PNG, WEBP — max 5 Mo</span></p>
+              <img id="tr-photo-thumb" class="photo-preview-thumb" src="" alt="Aperçu">
+            </label>
+            <button class="remove-photo" id="tr-remove-photo" onclick="removePhoto('tr')">✕ Supprimer la photo</button>
+          </div>
+          <div class="field">
+            <label>Conditions & Notes</label>
+            <textarea id="tr-notes" placeholder="Détails du transit, remarques particulières...">Facture émise pour les frais de transit et de dédouanement portuaire.</textarea>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:20px;justify-content:flex-end;">
+          <button class="btn btn-outline" onclick="clearTransitForm()">Réinitialiser</button>
+          <button class="btn btn-outline" onclick="previewDoc('transit')">👁 Aperçu</button>
+          <button class="btn btn-primary" onclick="saveDoc('transit')">💾 Enregistrer & Émettre</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════════ PAGE: LISTE DOCUMENTS ══════════ -->
   <div class="page" id="page-liste">
     <div class="tabs">
@@ -1265,6 +1491,7 @@
       <button class="tab" onclick="showTab('tab-recus', this)">Reçus</button>
       <button class="tab" onclick="showTab('tab-transport', this)">Transport</button>
       <button class="tab" onclick="showTab('tab-douane', this)">Douane</button>
+      <button class="tab" onclick="showTab('tab-transit', this)">Transit</button>
     </div>
 
     <div class="search-bar">
@@ -1297,6 +1524,11 @@
         <div style="text-align:center;padding:60px;color:var(--gris);">Aucun frais de douane.</div>
       </div>
     </div>
+    <div class="tab-content" id="tab-transit">
+      <div id="list-transit" class="doc-list">
+        <div style="text-align:center;padding:60px;color:var(--gris);">Aucun frais de transit.</div>
+      </div>
+    </div>
   </div>
 
   <!-- ══════════ PAGE: VOITURES ══════════ -->
@@ -1316,22 +1548,6 @@
           <option value="">Tout le stock</option>
           <option value="dispo">Disponibles</option>
           <option value="rupture">Rupture</option>
-        </select>
-        <select id="voiture-filtre-marque" onchange="renderVoitures()"
-          style="padding:9px 12px;border:1.5px solid var(--gris-clair);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif">
-          <option value="">Toutes marques</option>
-        </select>
-        <select id="voiture-filtre-origine" onchange="renderVoitures()"
-          style="padding:9px 12px;border:1.5px solid var(--gris-clair);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif">
-          <option value="">Toutes origines</option>
-        </select>
-        <select id="voiture-tri" onchange="renderVoitures()"
-          style="padding:9px 12px;border:1.5px solid var(--gris-clair);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif">
-          <option value="recent">Plus récent</option>
-          <option value="ancien">Plus ancien</option>
-          <option value="prix-asc">Prix croissant</option>
-          <option value="prix-desc">Prix décroissant</option>
-          <option value="annee-desc">Année récente</option>
         </select>
       </div>
       <button class="btn btn-primary" onclick="openVoitureModal()">+ Ajouter un véhicule</button>
@@ -1484,16 +1700,16 @@
     </div>
     <div style="overflow-y:auto;padding:28px;display:flex;flex-direction:column;gap:16px;">
 
-      <!-- Photos : jusqu'à 5 -->
+      <!-- Photo -->
       <div class="field">
-        <label>📷 Photos du véhicule <span id="vf-photo-count" style="color:var(--gris);font-weight:400">(0/5)</span></label>
+        <label>📷 Photo du véhicule</label>
         <label for="vf-photo-input" class="photo-upload-zone" id="vf-photo-zone" style="cursor:pointer;display:block;">
-          <input type="file" id="vf-photo-input" accept="image/*" multiple style="display:none" onchange="loadVfPhoto(this)">
+          <input type="file" id="vf-photo-input" accept="image/*" style="display:none" onchange="loadVfPhoto(this)">
           <div id="vf-upload-icon">🖼️</div>
-          <p id="vf-upload-txt">Cliquez pour ajouter jusqu'à 5 photos<br><span style="font-size:11px;color:#bbb">Extérieur, intérieur, moteur, compteur…</span></p>
+          <p id="vf-upload-txt">Cliquez pour ajouter une photo<br><span style="font-size:11px;color:#bbb">JPG, PNG — max 5 Mo</span></p>
           <img id="vf-photo-thumb" class="photo-preview-thumb" src="" alt="">
         </label>
-        <div id="vf-thumbs" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+        <button class="remove-photo" id="vf-remove-photo" onclick="removeVfPhoto()">✕ Supprimer</button>
       </div>
 
       <div class="form-grid">
@@ -1538,14 +1754,8 @@
           </select>
         </div>
         <div class="field">
-          <label>Prix de vente *</label>
+          <label>Prix de vente (GNF) *</label>
           <input type="number" id="vf-prix" placeholder="0">
-        </div>
-        <div class="field">
-          <label>Devise</label>
-          <select id="vf-devise">
-            <option>GNF</option><option>USD</option><option>RMB</option><option>EUR</option>
-          </select>
         </div>
         <div class="field">
           <label>Quantité en stock *</label>
@@ -1605,7 +1815,7 @@
         <button class="btn btn-primary btn-sm" onclick="printDoc()">🖨 Imprimer / PDF</button>
         <button class="btn btn-sm" style="background:#25D366;color:#fff;font-weight:700" onclick="shareWhatsApp()">📲 WhatsApp</button>
         <button class="btn btn-sm" style="background:#1A73E8;color:#fff;font-weight:700" onclick="shareEmail()">✉️ Email</button>
-        <button class="btn btn-sm" style="background:#1E7E5A;color:#fff;font-weight:700" id="preview-create-recu-btn" onclick="if(currentDoc&&(currentDoc.type==='proforma'||currentDoc.type==='transport'||currentDoc.type==='douane')){closePreview();creerRecuDepuisProforma(currentDoc);}">🧾 Créer Reçu</button>
+        <button class="btn btn-sm" style="background:#1E7E5A;color:#fff;font-weight:700" id="preview-create-recu-btn" onclick="if(currentDoc&&(currentDoc.type==='proforma'||currentDoc.type==='transport'||currentDoc.type==='douane'||currentDoc.type==='transit')){closePreview();creerRecuDepuisProforma(currentDoc);}">🧾 Créer Reçu</button>
         <button class="btn btn-outline btn-sm" style="color:#fff;border-color:#555" onclick="closePreview()">✕ Fermer</button>
       </div>
     </div>
@@ -1675,20 +1885,22 @@
 <script>
 // ══ CONFIG TYPES DE DOCUMENTS ══
 // Permet de gérer proforma / reçu / transport / douane de façon générique.
-var DOC_PAGE_BY_PREFIX = { pf: 'proforma', rc: 'recu', tp: 'transport', dn: 'douane' };
-var DOC_LABELS = { proforma: 'Facture Proforma', recu: 'Reçu de Paiement', transport: 'Facture Transport', douane: 'Frais de Douane' };
+var DOC_PAGE_BY_PREFIX = { pf: 'proforma', rc: 'recu', tp: 'transport', dn: 'douane', tr: 'transit' };
+var DOC_LABELS = { proforma: 'Facture Proforma', recu: 'Reçu de Paiement', transport: 'Facture Transport', douane: 'Frais de Douane', transit: 'Frais de Transit' };
 var DOC_BADGES = {
   proforma: '<span class="badge badge-or">Proforma</span>',
   recu: '<span class="badge badge-vert">Reçu</span>',
   transport: '<span class="badge" style="background:#DCE8FD;color:#2B5EA0;font-weight:700;">Transport</span>',
-  douane: '<span class="badge" style="background:#FDF3DC;color:#A0722B;font-weight:700;">Douane</span>'
+  douane: '<span class="badge" style="background:#FDF3DC;color:#A0722B;font-weight:700;">Douane</span>',
+  transit: '<span class="badge" style="background:#DCF0F8;color:#1F6B8C;font-weight:700;">Transit</span>'
 };
 function docBadge(type) { return DOC_BADGES[type] || DOC_BADGES.recu; }
 var DOC_CONFIG = {
   proforma:  { prefix: 'pf', pageId: 'proforma', numPrefix: 'PRO', collect: function(){ return collectProforma(); } },
   recu:      { prefix: 'rc', pageId: 'recu',      numPrefix: 'REC', collect: function(){ return collectRecu(); } },
   transport: { prefix: 'tp', pageId: 'transport', numPrefix: 'TRA', collect: function(){ return collectTransport(); } },
-  douane:    { prefix: 'dn', pageId: 'douane',    numPrefix: 'DOU', collect: function(){ return collectDouane(); } }
+  douane:    { prefix: 'dn', pageId: 'douane',    numPrefix: 'DOU', collect: function(){ return collectDouane(); } },
+  transit:   { prefix: 'tr', pageId: 'transit',   numPrefix: 'TRS', collect: function(){ return collectTransit(); } }
 };
 
 // ══ DATA STORE ══
@@ -1731,12 +1943,15 @@ window.onload = () => {
   document.getElementById('rc-date').value = today;
   document.getElementById('tp-date').value = today;
   document.getElementById('dn-date').value = today;
+  document.getElementById('tr-date').value = today;
 
   // Auto-numérotation
   document.getElementById('pf-num').value = nextDocNumber('proforma', 'PRO');
   document.getElementById('rc-num').value = nextDocNumber('recu', 'REC');
   document.getElementById('tp-num').value = nextDocNumber('transport', 'TRA');
   document.getElementById('dn-num').value = nextDocNumber('douane', 'DOU');
+  document.getElementById('tr-num').value = nextDocNumber('transit', 'TRS');
+  resetTransitRows();
 
   renderVoitures();
   updateDashboard();
@@ -1749,6 +1964,7 @@ const pageTitles = {
   recu: 'Nouveau Reçu de Paiement',
   transport: 'Nouvelle Facture Transport',
   douane: 'Nouveaux Frais de Douane',
+  transit: 'Nouveaux Frais de Transit',
   liste: 'Tous les documents',
   voitures: 'Stock de véhicules',
   clients: 'Base clients',
@@ -2074,7 +2290,8 @@ function buildDocHTML(doc, preview=false) {
   const isRecu = doc.type === 'recu';
   const isTransport = doc.type === 'transport';
   const isDouane = doc.type === 'douane';
-  const isSansTva = isTransport || isDouane;
+  const isTransitFrais = doc.type === 'transit';
+  const isSansTva = isTransport || isDouane || isTransitFrais;
   const typeLabel = DOC_LABELS[doc.type] ? DOC_LABELS[doc.type].toUpperCase() : 'DOCUMENT';
   const stamp = isRecu ? `<div class="doc-pdf-stamp-row"><div class="doc-pdf-stamp">PAYÉ</div><img class="doc-pdf-tampon" src="${AVM_TAMPON_B64}" alt="Tampon officiel Africa Vision Multiservices"></div>` : '';
 
@@ -2107,6 +2324,12 @@ function buildDocHTML(doc, preview=false) {
        <div class="doc-pdf-total-row"><span>Statut</span><span style="font-weight:700">${{non_paye:'❌ Non payé',partiel:'⚠️ Paiement partiel',complet:'✅ Soldé – Payé'}[doc.paiementStatut]||'—'}</span></div>`;
   } else if (isDouane && doc.declaration) {
     extra = `<div class="doc-pdf-total-row"><span>N° déclaration douanière</span><span>${doc.declaration}</span></div>`;
+  } else if (isTransitFrais) {
+    extra = `${doc.devise === 'USD' && doc.subDevise ? `<div class="doc-pdf-total-row"><span>Total en devise</span><span>${doc.subDevise}</span></div>
+       <div class="doc-pdf-total-row"><span>Taux de change appliqué</span><span>1 USD = ${fmt(doc.taux||0)} GNF</span></div>` : ''}
+       <div class="doc-pdf-total-row"><span>Montant versé</span><span style="color:#1E7E5A;font-weight:700">${fmt(doc.verse||0)} GNF</span></div>
+       <div class="doc-pdf-total-row"><span>Reste à payer</span><span style="color:${(doc.paiementStatut==='complet')?'#1E7E5A':'#C0392B'};font-weight:700">${doc.reste||'0 GNF'}</span></div>
+       <div class="doc-pdf-total-row"><span>Statut</span><span style="font-weight:700">${{non_paye:'❌ Non payé',partiel:'⚠️ Paiement partiel',complet:'✅ Soldé – Payé'}[doc.paiementStatut]||'—'}</span></div>`;
   }
 
   const refLine = (!isProforma && doc.refPf) ? `<div class="doc-pdf-date">Réf. Proforma : <strong>${doc.refPf}</strong></div>` : '';
@@ -2152,6 +2375,14 @@ function buildDocHTML(doc, preview=false) {
         ${vinLine}${immatLine}
       </div>
     </div>
+
+    ${isTransitFrais && (doc.conteneur || doc.compagnie || doc.navire) ? `
+    <div style="background:#f2f9fc;border:1.5px solid #7fb4cd;border-radius:8px;padding:14px 20px;margin-bottom:24px;display:flex;gap:32px;flex-wrap:wrap;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#1F6B8C;font-weight:700;width:100%;margin-bottom:6px;">🚢 Informations d'expédition</div>
+      ${doc.conteneur ? `<div><span style="font-size:11px;color:#888;">N° conteneur / BL</span><br><strong style="font-size:15px;color:#0D0D0D;">${doc.conteneur}</strong></div>` : ''}
+      ${doc.compagnie ? `<div><span style="font-size:11px;color:#888;">Compagnie maritime</span><br><strong style="font-size:14px;">${doc.compagnie}</strong></div>` : ''}
+      ${doc.navire ? `<div><span style="font-size:11px;color:#888;">Navire / Voyage</span><br><strong style="font-size:14px;">${doc.navire}</strong></div>` : ''}
+    </div>` : ''}
 
     ${(doc.km || doc.kmEtat || doc.kmType) ? `
     <div style="background:#fdf8f0;border:1.5px solid #C8963E;border-radius:8px;padding:14px 20px;margin-bottom:24px;display:flex;gap:32px;flex-wrap:wrap;">
@@ -2353,6 +2584,241 @@ function clearTransportForm() {
   var btnTp = document.querySelector('#page-transport .btn-primary:last-child');
   if (btnTp) btnTp.textContent = '💾 Enregistrer & Émettre';
   calcTotals('tp');
+}
+
+// ══════════════ FRAIS DE TRANSIT ══════════════
+var TRANSIT_POSTES = ["CTN","Delivery Order MSC","Coordinating fees","Tracker","Handling charges","Police clearance","Ecowas / CEDEAO","Document","Escort","Administration"];
+
+function transitRowHTML(label, amount, checked) {
+  var chk = (checked === false) ? '' : ' checked';
+  return '<td style="text-align:center"><input type="checkbox" class="tr-chk"' + chk + ' onchange="calcTransit()"></td>'
+    + '<td><input type="text" class="tr-lbl" value="' + String(label || '').replace(/"/g, '&quot;') + '" placeholder="Nom du poste"></td>'
+    + '<td><input type="number" class="tr-amt" value="' + (amount || 0) + '" min="0" step="0.01" oninput="calcTransit()"></td>'
+    + '<td class="row-total tr-gnf">0</td>'
+    + '<td><button class="remove-row" onclick="removeTransitRow(this)">\u00d7</button></td>';
+}
+
+function addTransitRow(label, amount) {
+  var tbody = document.getElementById('tr-items');
+  if (!tbody) return;
+  var tr = document.createElement('tr');
+  tr.innerHTML = transitRowHTML(label || '', amount || 0, true);
+  tbody.appendChild(tr);
+  calcTransit();
+}
+
+function removeTransitRow(btn) {
+  var tbody = document.getElementById('tr-items');
+  if (tbody && tbody.querySelectorAll('tr').length > 1) {
+    btn.closest('tr').remove();
+    calcTransit();
+  }
+}
+
+function resetTransitRows() {
+  var tbody = document.getElementById('tr-items');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  TRANSIT_POSTES.forEach(function(p) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = transitRowHTML(p, 0, true);
+    tbody.appendChild(tr);
+  });
+  calcTransit();
+}
+
+function calcTransit() {
+  var tbody = document.getElementById('tr-items');
+  if (!tbody) return;
+  var deviseEl = document.getElementById('tr-devise');
+  var devise = deviseEl ? deviseEl.value : 'USD';
+  var taux = parseFloat((document.getElementById('tr-taux') || {}).value) || 0;
+  var facteur = (devise === 'USD') ? taux : 1;
+
+  var lbl = document.getElementById('tr-devise-lbl');
+  if (lbl) lbl.textContent = '(' + devise + ')';
+
+  var sub = 0, totalGnf = 0;
+  tbody.querySelectorAll('tr').forEach(function(tr) {
+    var chk = tr.querySelector('.tr-chk');
+    var amt = parseFloat((tr.querySelector('.tr-amt') || {}).value) || 0;
+    var actif = chk ? chk.checked : true;
+    var gnf = actif ? amt * facteur : 0;
+    var cell = tr.querySelector('.tr-gnf');
+    if (cell) cell.textContent = fmt(gnf);
+    if (actif) { sub += amt; totalGnf += gnf; }
+    tr.style.opacity = actif ? '1' : '0.45';
+  });
+
+  var subEl = document.getElementById('tr-sub');
+  if (subEl) subEl.value = (devise === 'USD')
+    ? sub.toLocaleString('fr-FR', {maximumFractionDigits:2}) + ' $'
+    : fmt(sub) + ' GNF';
+  var totEl = document.getElementById('tr-total');
+  if (totEl) totEl.textContent = fmt(totalGnf) + ' GNF';
+
+  calcPaiementTransit();
+}
+
+function calcPaiementTransit() {
+  var totalEl = document.getElementById('tr-total');
+  var badge = document.getElementById('tr-paiement-badge');
+  if (!totalEl || !badge) return;
+  var total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('GNF','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
+  var verse = parseFloat((document.getElementById('tr-verse') || {}).value) || 0;
+  var reste = Math.max(0, total - verse);
+  var resteEl = document.getElementById('tr-reste');
+  if (resteEl) resteEl.value = fmt(reste) + ' GNF';
+
+  window._trPaiementStatut = 'non_paye';
+  if (total <= 0) {
+    badge.textContent = '\u2014 Aucun montant \u2014';
+    badge.style.background = '#eee'; badge.style.color = '#888';
+  } else if (verse >= total) {
+    window._trPaiementStatut = 'complet';
+    badge.textContent = '\u2705 Payé';
+    badge.style.background = '#e0f5ea'; badge.style.color = '#1E7E5A';
+  } else if (verse > 0) {
+    window._trPaiementStatut = 'partiel';
+    badge.textContent = '\u26a0\ufe0f Partiel';
+    badge.style.background = '#fdf3dc'; badge.style.color = '#A0722B';
+  } else {
+    badge.textContent = '\u274c Non payé';
+    badge.style.background = '#fbe4e4'; badge.style.color = '#C0392B';
+  }
+}
+
+function soldeTransit() {
+  var totalEl = document.getElementById('tr-total');
+  if (!totalEl) return;
+  var total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('GNF','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
+  document.getElementById('tr-verse').value = total;
+  calcPaiementTransit();
+  showToast('\u2705 Solde marqué comme payé');
+}
+
+function collectTransit() {
+  var devise = (document.getElementById('tr-devise') || {}).value || 'USD';
+  var taux = parseFloat((document.getElementById('tr-taux') || {}).value) || 0;
+  var facteur = (devise === 'USD') ? taux : 1;
+
+  var items = [];
+  document.querySelectorAll('#tr-items tr').forEach(function(tr) {
+    var chk = tr.querySelector('.tr-chk');
+    if (chk && !chk.checked) return;
+    var label = ((tr.querySelector('.tr-lbl') || {}).value || '').trim();
+    var amt = parseFloat((tr.querySelector('.tr-amt') || {}).value) || 0;
+    if (!label) return;
+    var gnf = Math.round(amt * facteur);
+    items.push({
+      designation: label,
+      qty: 1,
+      prix: gnf,
+      total: fmt(gnf),
+      devise: devise,
+      montantDevise: amt
+    });
+  });
+
+  return {
+    type: 'transit',
+    num: document.getElementById('tr-num').value,
+    date: document.getElementById('tr-date').value,
+    conteneur: document.getElementById('tr-conteneur').value,
+    compagnie: document.getElementById('tr-compagnie').value,
+    navire: document.getElementById('tr-navire').value,
+    refPf: document.getElementById('tr-ref-pf').value,
+    client: document.getElementById('tr-client').value,
+    tel: document.getElementById('tr-tel').value,
+    email: document.getElementById('tr-email').value,
+    adresse: document.getElementById('tr-adresse').value,
+    devise: devise,
+    taux: taux,
+    subDevise: (document.getElementById('tr-sub') || {}).value || '',
+    items: items,
+    total: document.getElementById('tr-total').textContent,
+    verse: document.getElementById('tr-verse').value,
+    reste: document.getElementById('tr-reste').value,
+    paiementStatut: window._trPaiementStatut || 'non_paye',
+    notes: document.getElementById('tr-notes').value,
+    photo: window._trPhoto || null,
+    createdAt: new Date().toISOString()
+  };
+}
+
+function populateTransitForm(doc) {
+  document.getElementById('tr-num').value = doc.num || '';
+  document.getElementById('tr-date').value = doc.date || '';
+  document.getElementById('tr-conteneur').value = doc.conteneur || '';
+  document.getElementById('tr-compagnie').value = doc.compagnie || '';
+  document.getElementById('tr-navire').value = doc.navire || '';
+  document.getElementById('tr-ref-pf').value = doc.refPf || '';
+  document.getElementById('tr-client').value = doc.client || '';
+  document.getElementById('tr-tel').value = doc.tel || '';
+  document.getElementById('tr-email').value = doc.email || '';
+  document.getElementById('tr-adresse').value = doc.adresse || '';
+  document.getElementById('tr-notes').value = doc.notes || '';
+  document.getElementById('tr-devise').value = doc.devise || 'USD';
+  document.getElementById('tr-taux').value = doc.taux || 8700;
+  document.getElementById('tr-verse').value = doc.verse || 0;
+
+  var tbody = document.getElementById('tr-items');
+  tbody.innerHTML = '';
+  (doc.items || []).forEach(function(it) {
+    var montant = (it.montantDevise !== undefined && it.montantDevise !== null)
+      ? it.montantDevise
+      : (parseFloat(it.prix) || 0);
+    var tr = document.createElement('tr');
+    tr.innerHTML = transitRowHTML(it.designation || '', montant, true);
+    tbody.appendChild(tr);
+  });
+  if (tbody.querySelectorAll('tr').length === 0) resetTransitRows();
+  calcTransit();
+
+  if (doc.photo) {
+    window._trPhoto = doc.photo;
+    var thumb = document.getElementById('tr-photo-thumb');
+    thumb.src = doc.photo; thumb.classList.add('visible');
+    document.getElementById('tr-remove-photo').classList.add('visible');
+    var zone = thumb.closest('.photo-upload-zone');
+    zone.querySelector('.upload-icon').style.display = 'none';
+    zone.querySelector('p').style.display = 'none';
+  }
+
+  window._editingDocNum = doc.num;
+  window._editingDocType = 'transit';
+  var saveBtn = document.querySelector('#page-transit .btn-primary:last-child');
+  if (saveBtn) saveBtn.textContent = '\U0001F4BE Sauvegarder les modifications';
+  showEditBanner('transit', doc.num);
+}
+
+function clearTransitForm() {
+  var page = document.getElementById('page-transit');
+  if (!page) return;
+  page.querySelectorAll('input, textarea').forEach(function(el) {
+    if (el.id === 'tr-date' || el.id === 'tr-taux') return;
+    if (el.type === 'checkbox') el.checked = true;
+    else el.value = '';
+  });
+  document.getElementById('tr-devise').value = 'USD';
+  document.getElementById('tr-verse').value = 0;
+  document.getElementById('tr-notes').value = 'Facture émise pour les frais de transit et de dédouanement portuaire.';
+  resetTransitRows();
+
+  window._trPhoto = null;
+  var thumb = document.getElementById('tr-photo-thumb');
+  if (thumb) { thumb.src = ''; thumb.classList.remove('visible'); }
+  var removeBtn = document.getElementById('tr-remove-photo');
+  if (removeBtn) removeBtn.classList.remove('visible');
+  var banner = document.getElementById('edit-banner-transit');
+  if (banner) banner.style.display = 'none';
+
+  window._editingDocType = null;
+  window._editingDocNum = null;
+  var numEl = document.getElementById('tr-num');
+  if (numEl) numEl.value = nextDocNumber('transit', 'TRS');
+  var btn = document.querySelector('#page-transit .btn-primary:last-child');
+  if (btn) btn.textContent = '\U0001F4BE Enregistrer & Émettre';
 }
 
 function clearDouaneForm() {
@@ -2614,6 +3080,7 @@ function renderDocList(filter='') {
   const recus = document.getElementById('list-recus');
   const transports = document.getElementById('list-transport');
   const douanes = document.getElementById('list-douane');
+  const transits = document.getElementById('list-transit');
 
   const render = (docs) => docs.length ? docs.map(d => docItemHTML(d)).join('') :
     '<div style="text-align:center;padding:60px;color:var(--gris);">Aucun document.</div>';
@@ -2626,6 +3093,7 @@ function renderDocList(filter='') {
   };
   const isTransport = function(d) { return d.type === 'transport'; };
   const isDouane = function(d) { return d.type === 'douane'; };
+  const isTransit = function(d) { return d.type === 'transit'; };
   // Fix type for recu docs that might have wrong value
   all.forEach(function(d) {
     if (isRecu(d) && d.type !== 'recu') d.type = 'recu';
@@ -2636,11 +3104,12 @@ function renderDocList(filter='') {
   recus.innerHTML = render(all.filter(isRecu));
   if (transports) transports.innerHTML = render(all.filter(isTransport));
   if (douanes) douanes.innerHTML = render(all.filter(isDouane));
+  if (transits) transits.innerHTML = render(all.filter(isTransit));
 }
 
 function docItemHTML(doc) {
   const badge = docBadge(doc.type);
-  const canMakeRecu = doc.type === 'proforma' || doc.type === 'transport' || doc.type === 'douane';
+  const canMakeRecu = doc.type === 'proforma' || doc.type === 'transport' || doc.type === 'douane' || doc.type === 'transit';
   const statutCmd = doc.statutCmd ? {en_cours:'⏳',en_transit:'🚢',arrive:'✅'}[doc.statutCmd]||'' : '';
   if (!window._docRegistry) window._docRegistry = {};
   const regKey = (doc.num || 'doc') + '_' + (doc.type || 'x');
@@ -2751,7 +3220,8 @@ function editDoc(doc) {
     proforma:  { page: 'proforma',  populate: populateProformaForm },
     recu:      { page: 'recu',      populate: populateRecuForm },
     transport: { page: 'transport', populate: populateTransportForm },
-    douane:    { page: 'douane',    populate: populateDouaneForm }
+    douane:    { page: 'douane',    populate: populateDouaneForm },
+    transit:   { page: 'transit',   populate: populateTransitForm }
   };
   const r = routes[doc.type] || routes.proforma;
   showPage(r.page);
@@ -3063,121 +3533,24 @@ const statutColors = {
   transit:    { bg:'#DCE8FD', color:'#2B5EA0', label:'🚢 En transit' },
 };
 
-/* ── Outils véhicules ─────────────────────────────────────── */
-function vSansAccent(s){
-  return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-}
-function vMarque(v){
-  return ((v.marque || v.nom || '').trim().split(/\s+/)[0]) || '';
-}
-function vDrapeau(o){
-  const x = vSansAccent(o);
-  if(!x) return '';
-  if(x.includes('japon')) return '🇯🇵';
-  if(x.includes('core')) return '🇰🇷';
-  if(x.includes('chine')) return '🇨🇳';
-  if(x.includes('allemagne')) return '🇩🇪';
-  if(x.includes('europe')) return '🇪🇺';
-  if(x.includes('emirat')||x.includes('dubai')) return '🇦🇪';
-  if(x.includes('usa')||x.includes('etats')) return '🇺🇸';
-  if(x.includes('france')) return '🇫🇷';
-  if(x.includes('belgique')) return '🇧🇪';
-  return '🚢';
-}
-/* Taux indicatifs, uniquement pour comparer et totaliser.
-   À réajuster de temps en temps : ils dérivent. */
-const TAUX_GNF = { GNF:1, USD:8600, EUR:9400, RMB:1200 };
-function vPrixGNF(v){
-  const t = TAUX_GNF[v.devise || 'GNF'] || 1;
-  return (parseFloat(v.prix) || 0) * t;
-}
-function vPrix(v){
-  const d = v.devise || 'GNF';
-  return fmt(v.prix) + ' ' + d;
-}
-function vPhotos(v){
-  if(Array.isArray(v.photos) && v.photos.length) return v.photos;
-  if(typeof v.photosJson === 'string' && v.photosJson){
-    try{ const a = JSON.parse(v.photosJson); if(Array.isArray(a) && a.length) return a; }catch(e){}
-  }
-  return v.photo ? [v.photo] : [];
-}
-/* Compression : Firestore limite chaque fiche à 1 Mo.
-   Sans ça, cinq photos de téléphone dépassent et rien ne s'enregistre. */
-function vCompresser(file){
-  return new Promise(function(res, rej){
-    const fr = new FileReader();
-    fr.onload = function(e){
-      const img = new Image();
-      img.onload = function(){
-        const maxW = 760;
-        const k = Math.min(1, maxW / img.width);
-        const c = document.createElement('canvas');
-        c.width = img.width * k; c.height = img.height * k;
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        res(c.toDataURL('image/jpeg', 0.58));
-      };
-      img.onerror = rej;
-      img.src = e.target.result;
-    };
-    fr.onerror = rej;
-    fr.readAsDataURL(file);
-  });
-}
-
 function renderVoitures() {
   const search = (document.getElementById('voiture-search')?.value || '').toLowerCase();
   const carb   = document.getElementById('voiture-filtre-carb')?.value || '';
   const stk    = document.getElementById('voiture-filtre-stock')?.value || '';
 
-  const mq  = document.getElementById('voiture-filtre-marque')?.value || '';
-  const org = document.getElementById('voiture-filtre-origine')?.value || '';
-  const tri = document.getElementById('voiture-tri')?.value || 'recent';
-  const q   = vSansAccent(search);
-
   let list = voitures.filter(v => {
-    const foin = vSansAccent([v.nom, v.marque, v.modele, v.couleur, v.annee, v.carburant,
-                              v.boite, v.origine, v.type, v.desc].join(' '));
-    const matchSearch = !q || foin.includes(q);
+    const matchSearch = !search || v.nom.toLowerCase().includes(search) || (v.couleur||'').toLowerCase().includes(search) || (v.annee||'').includes(search);
     const matchCarb = !carb || v.carburant === carb;
     const matchStk = !stk || (stk==='dispo' ? v.stock > 0 : v.stock === 0);
-    const matchMq  = !mq  || vMarque(v) === mq;
-    const matchOrg = !org || v.origine === org;
-    return matchSearch && matchCarb && matchStk && matchMq && matchOrg;
-  });
-
-  list.sort((a,b)=>{
-    switch(tri){
-      case 'ancien':     return (a.id||0) - (b.id||0);
-      case 'prix-asc':   return vPrixGNF(a) - vPrixGNF(b);
-      case 'prix-desc':  return vPrixGNF(b) - vPrixGNF(a);
-      case 'annee-desc': return (parseInt(b.annee)||0) - (parseInt(a.annee)||0);
-      default:           return (b.id||0) - (a.id||0);
-    }
-  });
-
-  // listes déroulantes alimentées par le stock réel
-  ['marque','origine'].forEach(function(champ){
-    const sel = document.getElementById('voiture-filtre-'+champ);
-    if(!sel) return;
-    const actuel = sel.value;
-    const vals = [...new Set(voitures.map(v => champ==='marque' ? vMarque(v) : (v.origine||'')).filter(Boolean))].sort();
-    sel.innerHTML = '<option value="">Toutes ' + (champ==='marque' ? 'marques' : 'origines') + '</option>' +
-      vals.map(x => '<option value="'+x+'">' + (champ==='origine' ? vDrapeau(x)+' ' : '') + x + '</option>').join('');
-    if(vals.includes(actuel)) sel.value = actuel;
+    return matchSearch && matchCarb && matchStk;
   });
 
   // Stats
   document.getElementById('v-stat-total').textContent = voitures.length;
   document.getElementById('v-stat-dispo').textContent = voitures.filter(v=>v.stock>0).length;
   document.getElementById('v-stat-rupture').textContent = voitures.filter(v=>v.stock===0).length;
-  // On convertit tout en GNF : additionner des devises différentes donnerait
-  // un chiffre faux qui a l'air juste. Les vendus ne sont plus du stock.
-  const valeur = voitures
-    .filter(v => v.statut !== 'vendu')
-    .reduce((s,v)=> s + vPrixGNF(v) * (parseInt(v.stock)||0), 0);
-  const melange = new Set(voitures.map(v=>v.devise||'GNF')).size > 1;
-  document.getElementById('v-stat-valeur').textContent = (melange ? '≈ ' : '') + fmt(valeur) + ' GNF';
+  const valeur = voitures.reduce((s,v)=>s+(parseFloat(v.prix)||0)*(parseInt(v.stock)||0),0);
+  document.getElementById('v-stat-valeur').textContent = fmt(valeur)+' GNF';
   document.getElementById('stat-stock').textContent = voitures.filter(v=>v.stock>0).length;
 
   const grid = document.getElementById('voiture-grid');
@@ -3188,10 +3561,8 @@ function renderVoitures() {
 
   grid.innerHTML = list.map(v => {
     const sc = statutColors[v.statut] || statutColors.disponible;
-    const ph = vPhotos(v);
-    const imgHtml = ph.length
-      ? `<img src="${ph[0]}" alt="${v.nom}" onerror="this.style.display='none'">`
-        + (ph.length > 1 ? `<div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.72);color:#fff;font-size:11px;padding:3px 8px;border-radius:20px;">📷 ${ph.length}</div>` : '')
+    const imgHtml = v.photo
+      ? `<img src="${v.photo}" alt="${v.nom}" onerror="this.style.display='none'">`
       : `<div class="voiture-img-placeholder">🚗</div>`;
     const stockColor = v.stock > 2 ? 'var(--vert)' : v.stock > 0 ? '#E8A020' : 'var(--rouge)';
     return `<div class="voiture-card" onclick="openVoitureDetail(${v.id})">
@@ -3202,8 +3573,8 @@ function renderVoitures() {
       </div>
       <div class="voiture-info">
         <div class="voiture-nom">${v.nom}</div>
-        <div class="voiture-annee">Année ${v.annee||'—'} · ${v.origine ? vDrapeau(v.origine)+' '+v.origine : ''}</div>
-        <div class="voiture-prix">${vPrix(v)}</div>
+        <div class="voiture-annee">Année ${v.annee||'—'} · ${v.origine||''}</div>
+        <div class="voiture-prix">${fmt(v.prix)} GNF</div>
         <div class="voiture-specs">
           ${v.carburant ? `<span class="voiture-spec">⛽ ${v.carburant}</span>` : ''}
           ${v.boite ? `<span class="voiture-spec">⚙️ ${v.boite}</span>` : ''}
@@ -3226,62 +3597,12 @@ function renderVoitures() {
   }).join('');
 }
 
-function vdPhoto(pas, index){
-  const ph = window._vdPhotos || [];
-  if(!ph.length) return;
-  window._vdIdx = (typeof index === 'number')
-    ? index
-    : (window._vdIdx + pas + ph.length) % ph.length;
-  const img = document.getElementById('vd-img');
-  if(img) img.src = ph[window._vdIdx];
-  const c = document.getElementById('vd-compteur');
-  if(c) c.textContent = (window._vdIdx + 1) + ' / ' + ph.length;
-  document.querySelectorAll('.vd-mini').forEach(function(m, i){
-    m.style.borderColor = (i === window._vdIdx) ? 'var(--or)' : 'transparent';
-  });
-}
-
-/* Envoie la fiche à un client par WhatsApp, avec le prix et la référence */
-function envoyerOffreVoiture(id){
-  const v = voitures.find(x=>x.id===id);
-  if(!v) return;
-  const dispo = v.statut === 'transit' ? 'En transit — réservable avant arrivée'
-              : v.statut === 'reserve' ? 'Réservé'
-              : v.statut === 'vendu'   ? 'Vendu'
-              : (v.stock > 0 ? 'Disponible' : 'Rupture de stock');
-  const txt =
-    'Bonjour 👋\n\nVoici le véhicule proposé par Africa Vision Multiservices :\n\n'
-    + '🚗 ' + v.nom + (v.annee ? ' — ' + v.annee : '') + '\n'
-    + '💰 ' + vPrix(v) + '\n'
-    + (v.km ? '🛣️ ' + v.km + '\n' : '')
-    + (v.carburant ? '⛽ ' + v.carburant + (v.boite ? ' · ' + v.boite : '') + '\n' : '')
-    + (v.couleur ? '🎨 ' + v.couleur + '\n' : '')
-    + (v.origine ? vDrapeau(v.origine) + ' Origine : ' + v.origine + '\n' : '')
-    + '📦 ' + dispo + '\n\n'
-    + 'Souhaitez-vous que je vous envoie les photos ?\n\n'
-    + '📞 +224 625 81 36 46 · +224 612 39 83 18\n🌐 africavisioncargo.com';
-  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
-}
-
 function openVoitureDetail(id) {
   const v = voitures.find(x=>x.id===id);
   if (!v) return;
   const sc = statutColors[v.statut] || statutColors.disponible;
-  window._vdPhotos = vPhotos(v);
-  window._vdIdx = 0;
-  const nph = window._vdPhotos.length;
-  const imgHtml = nph
-    ? `<div style="position:relative;background:#111;">
-         <img id="vd-img" src="${window._vdPhotos[0]}" alt="${v.nom}" style="width:100%;height:280px;object-fit:cover;display:block;">
-         ${nph > 1 ? `
-           <button onclick="vdPhoto(-1)" title="Photo précédente" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);color:#fff;border:0;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;">‹</button>
-           <button onclick="vdPhoto(1)" title="Photo suivante" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);color:#fff;border:0;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;">›</button>
-           <div id="vd-compteur" style="position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,.72);color:#fff;font-size:12px;padding:3px 10px;border-radius:20px;">1 / ${nph}</div>
-         ` : ''}
-       </div>
-       ${nph > 1 ? `<div style="display:flex;gap:6px;padding:10px 28px 0;flex-wrap:wrap;">`
-         + window._vdPhotos.map((p,i)=>`<img src="${p}" onclick="vdPhoto(0,${i})" style="width:56px;height:42px;object-fit:cover;border-radius:4px;cursor:pointer;border:2px solid transparent" class="vd-mini">`).join('')
-         + `</div>` : ''}`
+  const imgHtml = v.photo
+    ? `<img src="${v.photo}" alt="${v.nom}" style="width:100%;height:280px;object-fit:cover;display:block;">`
     : `<div style="height:200px;background:linear-gradient(135deg,#1a1a1a,#333);display:flex;align-items:center;justify-content:center;font-size:80px;">🚗</div>`;
 
   document.getElementById('voiture-detail-title').textContent = `${v.nom} (${v.annee||'—'})`;
@@ -3291,10 +3612,10 @@ function openVoitureDetail(id) {
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
         <div>
           <div style="font-size:22px;font-weight:800;">${v.nom}</div>
-          <div style="font-size:14px;color:var(--gris);margin-top:2px;">Année ${v.annee||'—'} · ${v.type||''} · ${v.origine ? vDrapeau(v.origine)+' '+v.origine : ''}</div>
+          <div style="font-size:14px;color:var(--gris);margin-top:2px;">Année ${v.annee||'—'} · ${v.type||''} · ${v.origine||''}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:26px;font-weight:800;color:var(--or)">${vPrix(v)}</div>
+          <div style="font-size:26px;font-weight:800;color:var(--or)">${fmt(v.prix)} GNF</div>
           <div style="display:inline-block;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:800;background:${sc.bg};color:${sc.color};margin-top:4px;">${sc.label}</div>
         </div>
       </div>
@@ -3315,7 +3636,6 @@ function openVoitureDetail(id) {
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
         <button class="btn btn-outline" onclick="editVoiture(${v.id});closeVoitureDetail()">✏️ Modifier</button>
-        <button class="btn btn-outline" onclick="envoyerOffreVoiture(${v.id})">📲 Envoyer l'offre au client</button>
         <button class="btn btn-danger btn-sm" onclick="deleteVoiture(${v.id})">🗑 Supprimer</button>
       </div>
     </div>`;
@@ -3349,10 +3669,19 @@ function openVoitureModal(v=null) {
   document.getElementById('vf-origine').value = v?.origine || 'Chine';
   document.getElementById('vf-statut').value = v?.statut || 'disponible';
   document.getElementById('vf-type').value = v?.type || 'Neuf';
-  document.getElementById('vf-devise').value = v?.devise || 'GNF';
-  // photos
-  window._vfPhotos = v ? vPhotos(v).slice(0, 5) : [];
-  renderVfThumbs();
+  // photo
+  window._vfPhoto = v?.photo || null;
+  const thumb = document.getElementById('vf-photo-thumb');
+  const icon = document.getElementById('vf-upload-icon');
+  const txt = document.getElementById('vf-upload-txt');
+  const rmBtn = document.getElementById('vf-remove-photo');
+  if (v?.photo) {
+    thumb.src = v.photo; thumb.classList.add('visible');
+    icon.style.display='none'; txt.style.display='none'; rmBtn.classList.add('visible');
+  } else {
+    thumb.src=''; thumb.classList.remove('visible');
+    icon.style.display=''; txt.style.display=''; rmBtn.classList.remove('visible');
+  }
   document.getElementById('voiture-form-overlay').classList.add('open');
   showReturnBtn();
 }
@@ -3366,52 +3695,30 @@ function closeVoitureForm() {
   document.getElementById('voiture-form-overlay').classList.remove('open');
 }
 
-const VF_MAX_PHOTOS = 5;
-
-async function loadVfPhoto(input) {
-  const files = Array.from(input.files || []);
-  if (!files.length) return;
-  window._vfPhotos = window._vfPhotos || [];
-  const place = VF_MAX_PHOTOS - window._vfPhotos.length;
-  if (place <= 0) { showToast('⚠️ Limite de 5 photos atteinte'); input.value=''; return; }
-  for (const f of files.slice(0, place)) {
-    try { window._vfPhotos.push(await vCompresser(f)); }
-    catch(e) { showToast('⚠️ Photo illisible : ' + f.name); }
-  }
-  if (files.length > place) showToast('⚠️ Seules les ' + place + ' premières photos ont été gardées');
-  input.value = '';
-  renderVfThumbs();
-  const total = (window._vfPhotos || []).reduce((s,p)=>s+p.length, 0);
-  showToast('📷 ' + window._vfPhotos.length + ' photo(s) · ' + Math.round(total/1024) + ' Ko sur 1000 Ko');
+function loadVfPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5*1024*1024) { showToast('⚠️ Photo trop lourde (max 5 Mo)'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    window._vfPhoto = e.target.result;
+    const thumb = document.getElementById('vf-photo-thumb');
+    thumb.src = e.target.result; thumb.classList.add('visible');
+    document.getElementById('vf-upload-icon').style.display='none';
+    document.getElementById('vf-upload-txt').style.display='none';
+    document.getElementById('vf-remove-photo').classList.add('visible');
+  };
+  reader.readAsDataURL(file);
 }
 
-function removeVfPhoto(i) {
-  window._vfPhotos = window._vfPhotos || [];
-  if (typeof i === 'number') window._vfPhotos.splice(i, 1);
-  else window._vfPhotos = [];
-  renderVfThumbs();
-}
-
-function renderVfThumbs() {
-  const ph = window._vfPhotos = window._vfPhotos || [];
-  window._vfPhoto = ph[0] || null;
-  const zone = document.getElementById('vf-thumbs');
-  const cpt  = document.getElementById('vf-photo-count');
-  const icon = document.getElementById('vf-upload-icon');
-  const txt  = document.getElementById('vf-upload-txt');
-  const thumb= document.getElementById('vf-photo-thumb');
-  if (cpt) cpt.textContent = '(' + ph.length + '/' + VF_MAX_PHOTOS + ')';
-  if (thumb) { thumb.src=''; thumb.classList.remove('visible'); }
-  if (icon) icon.style.display = ph.length ? 'none' : '';
-  if (txt)  txt.style.display  = ph.length ? 'none' : '';
-  if (!zone) return;
-  zone.innerHTML = ph.map(function(p, i){
-    return '<div style="position:relative;width:72px;height:56px;border-radius:6px;overflow:hidden;border:1px solid var(--gris-clair)">'
-      + '<img src="' + p + '" style="width:100%;height:100%;object-fit:cover">'
-      + (i===0 ? '<span style="position:absolute;left:0;bottom:0;background:var(--or);color:#000;font-size:9px;padding:1px 4px">1re</span>' : '')
-      + '<button onclick="removeVfPhoto(' + i + ')" title="Retirer" style="position:absolute;top:0;right:0;background:rgba(0,0,0,.7);color:#fff;border:0;width:18px;height:18px;line-height:18px;padding:0;cursor:pointer;font-size:11px">✕</button>'
-      + '</div>';
-  }).join('');
+function removeVfPhoto() {
+  window._vfPhoto = null;
+  const thumb = document.getElementById('vf-photo-thumb');
+  thumb.src=''; thumb.classList.remove('visible');
+  document.getElementById('vf-upload-icon').style.display='';
+  document.getElementById('vf-upload-txt').style.display='';
+  document.getElementById('vf-remove-photo').classList.remove('visible');
+  document.getElementById('vf-photo-input').value='';
 }
 
 function saveVoiture() {
@@ -3433,21 +3740,8 @@ function saveVoiture() {
     statut: document.getElementById('vf-statut').value,
     type: document.getElementById('vf-type').value,
     desc: document.getElementById('vf-desc').value,
-    devise: document.getElementById('vf-devise').value,
-    photos: (window._vfPhotos || []).slice(0, 5),
-    photo: (window._vfPhotos && window._vfPhotos[0]) || null,
+    photo: window._vfPhoto || null,
   };
-
-  // Firestore refuse un document de plus de 1 Mo.
-  // On mesure le document réellement envoyé, pas l'objet local : celui-ci
-  // contient à la fois "photos" et "photo", donc la 1re photo compte double.
-  const poids = JSON.stringify(_avVoitPourFb(data)).length;
-  if (poids > 1000000) {
-    alert("Cette fiche pèse " + Math.round(poids/1024) + " Ko, au-delà de la limite de 1000 Ko.\n\n"
-        + data.photos.length + " photo(s) jointe(s).\n\n"
-        + "Retirez une photo et réessayez.");
-    return;
-  }
 
   if (editId) {
     const idx = voitures.findIndex(v=>v.id==editId);
@@ -3461,51 +3755,18 @@ function saveVoiture() {
   try { localStorage.setItem('av_voitures',JSON.stringify(voitures)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
   closeVoitureForm();
   renderVoitures();
-
-  // On enregistre d'abord CETTE fiche, et on le dit si ça échoue.
-  // Avant, une ancienne fiche en erreur bloquait toutes les suivantes.
-  (async function(){
-    if (!window._avFbOn) {
-      showToast('⚠️ Firebase non connecté — véhicule enregistré sur cet appareil seulement');
-      return;
-    }
-    const cible = voitures.find(x => x.id == (editId || data.id)) || data;
-    const err = await window._avSaveVoitUne(cible);
-    if (err) {
-      showToast('❌ Non publié : ' + err);
-      alert("Le véhicule est enregistré sur cet appareil, mais il n'a PAS été "
-          + "publié en ligne.\n\nRaison : " + err
-          + "\n\nIl n'apparaîtra donc pas sur la vitrine tant que ce n'est pas réglé.");
-      return;
-    }
-    try { localStorage.setItem('av_voitures', JSON.stringify(voitures)); } catch(e) {}
-    showToast('☁️ Enregistré et publié sur la vitrine');
-  })();
+  // Save to Firebase in background
+  if(window._avFbOn && window._avSaveVoit) window._avSaveVoit();
 }
 
-async function deleteVoiture(id) {
-  const cible = voitures.find(v => v.id === id);
-  if (!cible) return;
-  if (!confirm('Supprimer « ' + (cible.nom || 'ce véhicule') + ' » du stock ?')) return;
-
-  // On supprime d'ABORD dans Firestore. Sinon le document y reste et
-  // le véhicule réapparaît à la synchronisation suivante.
-  if (window._avFbOn) {
-    showToast('⏳ Suppression en cours…');
-    const err = await window._avDeleteVoitUne(cible);
-    if (err) {
-      alert("Le véhicule n'a PAS pu être supprimé en ligne.\n\nRaison : " + err
-          + "\n\nIl est toujours présent sur la vitrine. Réessayez.");
-      return;
-    }
-  }
-
-  voitures = voitures.filter(v => v.id !== id);
-  try { localStorage.setItem('av_voitures', JSON.stringify(voitures)); } catch(qe) {}
+function deleteVoiture(id) {
+  if (!confirm('Supprimer ce véhicule du stock ?')) return;
+  voitures = voitures.filter(v=>v.id!==id);
+  try { localStorage.setItem('av_voitures',JSON.stringify(voitures)); } catch(qe) { console.log('Stockage local plein (ignoré) :', qe.message); }
+  if(window._avFbOn)window._avSaveVoit();
   closeVoitureDetail();
   renderVoitures();
-  showToast(window._avFbOn ? '🗑 Supprimé du stock et de la vitrine'
-                           : '🗑 Supprimé sur cet appareil seulement');
+  showToast('🗑 Véhicule supprimé');
 }
 
 function creerProformaVoiture(id) {
@@ -3531,20 +3792,8 @@ function creerProformaVoiture(id) {
 }
 
 function partagerVoitureWA(v) {
-  const ph = vPhotos(v);
-  const msg = `🚗 *AFRICA VISION MULTISERVICES*\n🏷️ *Véhicule disponible*\n━━━━━━━━━━━━━━━━━━\n`
-    + `*${v.nom}* — Année ${v.annee||'—'}\n`
-    + `💰 Prix : *${vPrix(v)}*\n`
-    + `⛽ ${v.carburant||''} | ⚙️ ${v.boite||''} | 🎨 ${v.couleur||''}\n`
-    + (v.origine ? `${vDrapeau(v.origine)} Origine : ${v.origine}\n` : '')
-    + (ph.length > 1 ? `📷 ${ph.length} photos disponibles\n` : '')
-    + `📦 ${v.statut === 'transit' ? 'En transit — réservable avant arrivée'
-          : v.stock > 0 ? v.stock + ' unité(s) en stock' : 'Rupture de stock'}\n`
-    + `━━━━━━━━━━━━━━━━━━\n`
-    + `📞 +224 625 81 36 46\n📞 +224 612 39 83 18\n`
-    + `🌐 africavisioncargo.com\n📍 Madina – Sonfonia T7, Conakry`;
-  // Pas de numéro dans le lien : WhatsApp laisse choisir le client destinataire
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  const msg = `🚗 *AFRICA VISION MULTISERVICES*\n🏷️ *Véhicule disponible*\n━━━━━━━━━━━━━━━━━━\n*${v.nom}* — Année ${v.annee||'—'}\n💰 Prix : *${fmt(v.prix)} GNF*\n⛽ ${v.carburant||''} | ⚙️ ${v.boite||''} | 🎨 ${v.couleur||''}\n📦 Stock : ${v.stock} unité(s)\n━━━━━━━━━━━━━━━━━━\n📞 +224 625 81 36 46\n🌐 africavisioncargo.com\n📍 Madina – Sonfonia, Conakry`;
+  window.open(`https://wa.me/224625813646?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 // ══ CLIENTS ══
@@ -3833,7 +4082,7 @@ function cancelEdit(pageType) {
   window._editingDocType = null;
   const banner = document.getElementById(`edit-banner-${pageType}`);
   if (banner) banner.style.display = 'none';
-  const prefixMap = { proforma: 'pf', recu: 'rc', transport: 'tp', douane: 'dn' };
+  const prefixMap = { proforma: 'pf', recu: 'rc', transport: 'tp', douane: 'dn', transit: 'tr' };
   const prefix = prefixMap[pageType] || 'pf';
   const saveBtn = document.querySelector(`#page-${pageType} .btn-primary:last-child`);
   if (saveBtn) saveBtn.textContent = '💾 Enregistrer & Émettre';
@@ -3961,9 +4210,7 @@ async function fbPut(col, id, data) {
 
 async function fbDel(col, id) {
   var url = FB_BASE + col + '/' + id + '?key=' + _avFbKey;
-  var r = await fetchWithTimeout(url, {method:'DELETE'}, 5000);
-  // Sans ce contrôle, un refus du serveur passait pour une suppression réussie
-  if (r && !r.ok && r.status !== 404) throw new Error('suppression refusée (code ' + r.status + ')');
+  await fetchWithTimeout(url, {method:'DELETE'}, 5000);
 }
 
 async function avFbLoadAll(silent) {
@@ -3974,9 +4221,6 @@ async function avFbLoadAll(silent) {
   try {
     var rawDocs = await fbGetAll('documents');
     var rawVoit = await fbGetAll('voitures');
-    // La lecture a réussi : la connexion est établie. On le note ICI, avant
-    // la reprise des véhicules en attente — sinon elle échouait toujours.
-    window._avFbOn = true;
     // Firebase is the source of truth - always replace local
     documents = rawDocs;
     // Sur certains navigateurs (Safari/iPhone notamment), le stockage local
@@ -3994,34 +4238,8 @@ async function avFbLoadAll(silent) {
         if(v.prix) v.prix=Number(v.prix);
         if(v.stock!==undefined) v.stock=Number(v.stock);
         if(v.id) v.id=Number(v.id);
-        v.photos = vPhotos(v);          // photosJson -> tableau
-        if(!v.devise) v.devise = 'GNF';
       });
-      // Firebase fait référence, MAIS on ne jette pas les véhicules saisis
-      // ici qui n'ont pas encore réussi à partir : ils seraient perdus.
-      var idsFb = {};
-      rawVoit.forEach(function(v){ if(v.id) idsFb[String(v.id)] = true; });
-      var enAttente = (voitures || []).filter(function(v){
-        return v && v.id && !idsFb[String(v.id)];
-      });
-      voitures = rawVoit.concat(enAttente);
-      try { localStorage.setItem('av_voitures', JSON.stringify(voitures)); } catch(e) {}
-      if (enAttente.length) {
-        showToast('⚠️ ' + enAttente.length + ' véhicule(s) pas encore publié(s) — nouvelle tentative…');
-        (async function(){
-          var restants = [];
-          for (var j = 0; j < enAttente.length; j++) {
-            var err = await window._avSaveVoitUne(enAttente[j]);
-            if (err) restants.push(enAttente[j].nom + ' : ' + err);
-          }
-          if (restants.length) {
-            console.log('Toujours non publiés :', restants);
-            showToast('❌ ' + restants.join(' | '));
-          } else {
-            showToast('☁️ Véhicules en attente publiés');
-          }
-        })();
-      }
+      voitures = rawVoit;
     }
     window._avFbOn = true;
     setBtnOk();
@@ -4063,60 +4281,16 @@ window._avSaveDocs = async function() {
   } catch(e) { console.log('saveDocs error:', e); }
 };
 
-/* Prépare une fiche pour Firestore.
-   photosJson n'est écrit que s'il y a plusieurs photos : sinon on
-   dupliquerait la photo dans le même document et on dépasserait le 1 Mo. */
-function _avVoitPourFb(v) {
-  var d = Object.assign({}, v);
-  var ph = vPhotos(v);
-  d.photo = ph[0] || '';
-  d.photosJson = ph.length > 1 ? JSON.stringify(ph) : '';
-  d.marque = vMarque(v);
-  delete d.photos;
-  return d;
-}
-
-/* Écrit UNE fiche. Renvoie null si tout va bien, un message sinon. */
-window._avSaveVoitUne = async function(v) {
-  if (!window._avFbOn) return 'Firebase non connecté';
-  try {
-    var id = v._id || ('v' + v.id);
-    v._id = id;
-    var d = _avVoitPourFb(v);
-    if (JSON.stringify(d).length > 950000)
-      return 'fiche trop lourde (' + Math.round(JSON.stringify(d).length/1024) + ' Ko) — retirez des photos';
-    await fbPut('voitures', id, d);
-    return null;
-  } catch(e) {
-    return e.message || 'erreur réseau';
-  }
-};
-
-/* Supprime UNE fiche dans Firestore. Renvoie null si tout va bien. */
-window._avDeleteVoitUne = async function(v) {
-  if (!window._avFbOn) return 'Firebase non connecté';
-  try {
-    var id = v._id || ('v' + v.id);
-    await fbDel('voitures', id);
-    return null;
-  } catch(e) {
-    return e.message || 'erreur réseau';
-  }
-};
-
-/* Écrit toutes les fiches. Une fiche en échec n'interrompt plus les autres. */
 window._avSaveVoit = async function() {
   if (!window._avFbOn) return;
-  var echecs = [];
-  for (var i = 0; i < voitures.length; i++) {
-    var err = await window._avSaveVoitUne(voitures[i]);
-    if (err) echecs.push((voitures[i].nom || 'fiche ' + i) + ' : ' + err);
-  }
-  if (echecs.length) {
-    console.log('Fiches non enregistrées :', echecs);
-    showToast('⚠️ ' + echecs.length + ' fiche(s) non enregistrée(s) — voir la console');
-  }
-  return echecs;
+  try {
+    for (var i=0; i<voitures.length; i++) {
+      var v = voitures[i];
+      var id = v._id || ('v'+v.id);
+      v._id = id;
+      await fbPut('voitures', id, v);
+    }
+  } catch(e) { console.log('saveVoit:', e); }
 };
 
 async function deleteDocFromFb(id) {
@@ -4201,19 +4375,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('avlogin').style.display='flex';
   }
 
-  // La lecture Firestore ne demande pas de session : on se connecte tout de
-  // suite, sans attendre. Avant, il fallait appuyer sur « Synchroniser ».
-  setTimeout(function(){ if(!window._avFbOn) avFbLoadAll(true); }, 400);
-
-  // Puis toutes les 60 secondes au lieu de 3 minutes, et on retente même
-  // si la connexion a échoué au démarrage.
-  setInterval(function(){ avFbLoadAll(true); }, 60000);
-
-  // Et dès que le réseau revient, ou que l'on rouvre l'onglet
-  window.addEventListener('online', function(){ avFbLoadAll(true); });
-  document.addEventListener('visibilitychange', function(){
-    if(!document.hidden) avFbLoadAll(true);
-  });
+  // Auto-sync every 3 minutes
+  setInterval(function(){
+    if(window._avFbOn) avFbLoadAll(true);
+  }, 180000);
 });
 
 // ── MOBILE MENU ──
