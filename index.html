@@ -1823,6 +1823,9 @@
         <button class="btn btn-sm" style="background:#25D366;color:#fff;font-weight:700" onclick="shareWhatsApp()">📲 WhatsApp</button>
         <button class="btn btn-sm" style="background:#1A73E8;color:#fff;font-weight:700" onclick="shareEmail()">✉️ Email</button>
         <button class="btn btn-sm" style="background:#1E7E5A;color:#fff;font-weight:700" id="preview-create-recu-btn" onclick="if(currentDoc&&(currentDoc.type==='proforma'||currentDoc.type==='transport'||currentDoc.type==='douane'||currentDoc.type==='transit')){closePreview();creerRecuDepuisProforma(currentDoc);}">🧾 Créer Reçu</button>
+        <button class="btn btn-sm" style="background:#2B5EA0;color:#fff;font-weight:700" id="preview-create-transport-btn" onclick="if(currentDoc){closePreview();creerDocDepuis(currentDoc,'transport');}">🚚 Créer Transport</button>
+        <button class="btn btn-sm" style="background:#A0722B;color:#fff;font-weight:700" id="preview-create-douane-btn" onclick="if(currentDoc){closePreview();creerDocDepuis(currentDoc,'douane');}">🛃 Créer Douane</button>
+        <button class="btn btn-sm" style="background:#1F6B8C;color:#fff;font-weight:700" id="preview-create-transit-btn" onclick="if(currentDoc){closePreview();creerDocDepuis(currentDoc,'transit');}">🚢 Créer Transit</button>
         <button class="btn btn-outline btn-sm" style="color:#fff;border-color:#555" onclick="closePreview()">✕ Fermer</button>
       </div>
     </div>
@@ -2450,6 +2453,7 @@ function previewDoc(type) {
   document.getElementById('preview-title').textContent = 'Aperçu ' + (DOC_LABELS[type] || 'Document');
   document.getElementById('preview-content').innerHTML = buildDocHTML(currentDoc, true);
   document.getElementById('preview-overlay').classList.add('open');
+  refreshPreviewButtons();
 }
 
 function closePreview() {
@@ -3154,6 +3158,76 @@ function docAction(btn) {
   else if (action === 'recu') creerRecuDepuisProforma(doc);
 }
 
+// ══ BOUTONS "CRÉER ..." DEPUIS L'APERÇU ══
+// Masque le bouton correspondant au type du document affiché
+function refreshPreviewButtons() {
+  var t = currentDoc ? currentDoc.type : '';
+  var map = {
+    'preview-create-recu-btn': t !== 'recu',
+    'preview-create-transport-btn': t !== 'transport',
+    'preview-create-douane-btn': t !== 'douane',
+    'preview-create-transit-btn': t !== 'transit'
+  };
+  Object.keys(map).forEach(function(id) {
+    var b = document.getElementById(id);
+    if (b) b.style.display = map[id] ? '' : 'none';
+  });
+}
+
+// Crée un Transport / Douane / Transit pré-rempli depuis le document source
+function creerDocDepuis(src, cible) {
+  var cfg = {
+    transport: { page: 'transport', p: 'tp', clear: 'clearTransportForm', label: 'Facture Transport' },
+    douane:    { page: 'douane',    p: 'dn', clear: 'clearDouaneForm',    label: 'Frais de Douane' },
+    transit:   { page: 'transit',   p: 'tr', clear: 'clearTransitForm',   label: 'Frais de Transit' }
+  }[cible];
+  if (!cfg || !src) return;
+
+  showPage(cfg.page);
+  if (typeof window[cfg.clear] === 'function') window[cfg.clear]();
+
+  setTimeout(function() {
+    var set = function(id, val) {
+      var el = document.getElementById(cfg.p + '-' + id);
+      if (el && val !== undefined && val !== null && val !== '') el.value = val;
+    };
+    set('client', src.client);
+    set('tel', src.tel);
+    set('email', src.email);
+    set('adresse', src.adresse);
+    set('ref-pf', src.num);
+
+    // Infos véhicule (transport et douane)
+    set('km', src.km);
+    set('km-etat', src.kmEtat);
+    set('km-type', src.kmType);
+
+    // Infos d'expédition entre douane et transit
+    if (cible === 'transit' && src.declaration) set('conteneur', src.declaration);
+
+    // Photo du véhicule / conteneur
+    if (src.photo) {
+      window['_' + cfg.p + 'Photo'] = src.photo;
+      var thumb = document.getElementById(cfg.p + '-photo-thumb');
+      if (thumb) {
+        thumb.src = src.photo;
+        thumb.classList.add('visible');
+        var rm = document.getElementById(cfg.p + '-remove-photo');
+        if (rm) rm.classList.add('visible');
+        var zone = thumb.closest('.photo-upload-zone');
+        if (zone) {
+          var icon = zone.querySelector('.upload-icon');
+          var txt = zone.querySelector('p');
+          if (icon) icon.style.display = 'none';
+          if (txt) txt.style.display = 'none';
+        }
+      }
+    }
+
+    showToast('\u2705 ' + cfg.label + ' pré-rempli depuis ' + (src.num || 'le document'));
+  }, 300);
+}
+
 function creerRecuDepuisProforma(proforma) {
   // Navigate to recu page
   showPage('recu');
@@ -3219,6 +3293,7 @@ function viewDoc(doc) {
   document.getElementById('preview-title').textContent = DOC_LABELS[doc.type] || 'Document';
   document.getElementById('preview-content').innerHTML = buildDocHTML(doc);
   document.getElementById('preview-overlay').classList.add('open');
+  refreshPreviewButtons();
 }
 
 function editDoc(doc) {
