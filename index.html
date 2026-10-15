@@ -508,10 +508,13 @@
   <div class="nav-section">
     <div class="nav-label">Finances</div>
     <button class="nav-btn" onclick="showPage('depenses')">
-      <span class="icon">💸</span> Dépenses GNF
+      <span class="icon">💸</span> Dépenses
     </button>
     <button class="nav-btn" onclick="showPage('depots')">
       <span class="icon">💵</span> Dépôts USD
+    </button>
+    <button class="nav-btn" onclick="convertirDonneesUSD()">
+      <span class="icon">🔄</span> Convertir anciennes données en $
     </button>
   </div>
 
@@ -554,7 +557,7 @@
       </div>
       <div class="stat-card" onclick="debugCA()" style="cursor:pointer" title="Cliquer pour voir le détail du calcul">
         <div class="stat-label">Chiffre d'affaires</div>
-        <div class="stat-value stat-or" id="stat-ca">0 GNF</div>
+        <div class="stat-value stat-or" id="stat-ca">0 $</div>
         <div class="stat-sub">Total encaissé — 🔍 cliquer pour le détail</div>
       </div>
       <div class="stat-card">
@@ -597,8 +600,8 @@
         </div>
       </div>
       <div class="stat-card" style="border-left:4px solid #ff9800">
-        <div class="stat-label">Dépense en GNF</div>
-        <div class="stat-value" id="stat-depense-gnf" style="color:#ff9800">0 GNF</div>
+        <div class="stat-label">Dépenses (USD)</div>
+        <div class="stat-value" id="stat-depense-gnf" style="color:#ff9800">0 $</div>
         <div class="stat-sub">Total dépenses</div>
       </div>
       <div class="stat-card" style="border-left:4px solid #4CAF50">
@@ -694,7 +697,7 @@
                 <th style="width:35%">Désignation / Modèle</th>
                 <th style="width:15%">Année</th>
                 <th style="width:12%">Qté</th>
-                <th style="width:20%">Prix unitaire (GNF)</th>
+                <th style="width:20%">Prix unitaire (USD $)</th>
                 <th style="width:15%">Total</th>
                 <th style="width:3%"></th>
               </tr>
@@ -713,16 +716,16 @@
 
           <div class="totals-box">
             <div class="totals-inner">
-              <div class="total-row"><span>Sous-total HT</span><span id="pf-ht">0 GNF</span></div>
+              <div class="total-row"><span>Sous-total HT</span><span id="pf-ht">0 $</span></div>
               <div class="total-row">
                 <span>TVA (<input type="number" id="pf-tva" value="18" style="width:40px;border:1px solid #ddd;border-radius:4px;padding:2px 4px;font-size:13px" oninput="calcTotals('pf')">%)</span>
-                <span id="pf-tva-val">0 GNF</span>
+                <span id="pf-tva-val">0 $</span>
               </div>
               <div class="total-row">
                 <span>Acompte versé</span>
                 <input type="number" id="pf-acompte" value="0" style="width:120px;border:1px solid #ddd;border-radius:6px;padding:4px 8px;text-align:right;font-size:13px" oninput="calcTotals('pf')">
               </div>
-              <div class="total-row grand"><span>TOTAL NET</span><span id="pf-total">0 GNF</span></div>
+              <div class="total-row grand"><span>TOTAL NET</span><span id="pf-total">0 $</span></div>
             </div>
           </div>
         </div>
@@ -851,7 +854,7 @@
                 <th style="width:13%">Année</th>
                 <th style="width:13%">Couleur</th>
                 <th style="width:10%">Qté</th>
-                <th style="width:18%">Prix unitaire (GNF)</th>
+                <th style="width:18%">Prix unitaire (USD $)</th>
                 <th style="width:11%">Total</th>
                 <th style="width:3%"></th>
               </tr>
@@ -871,12 +874,12 @@
 
           <div class="totals-box">
             <div class="totals-inner" style="width:360px;">
-              <div class="total-row"><span>Sous-total HT</span><span id="rc-ht">0 GNF</span></div>
+              <div class="total-row"><span>Sous-total HT</span><span id="rc-ht">0 $</span></div>
               <div class="total-row">
                 <span>TVA (<input type="number" id="rc-tva" value="18" style="width:40px;border:1px solid #ddd;border-radius:4px;padding:2px 4px;font-size:13px" oninput="calcTotals('rc')">%)</span>
-                <span id="rc-tva-val">0 GNF</span>
+                <span id="rc-tva-val">0 $</span>
               </div>
-              <div class="total-row grand"><span>TOTAL TTC</span><span id="rc-total">0 GNF</span></div>
+              <div class="total-row grand"><span>TOTAL TTC</span><span id="rc-total">0 $</span></div>
             </div>
           </div>
 
@@ -890,7 +893,7 @@
               </div>
               <div class="field">
                 <label>Reste à payer</label>
-                <input type="text" id="rc-reste" value="0 GNF" readonly style="background:#e8f5ee;font-weight:700;color:var(--vert);border-color:var(--vert)">
+                <input type="text" id="rc-reste" value="0 $" readonly style="background:#e8f5ee;font-weight:700;color:var(--vert);border-color:var(--vert)">
               </div>
               <div class="field">
                 <label>Statut paiement</label>
@@ -1024,7 +1027,7 @@
               <tr>
                 <th style="width:50%">Désignation</th>
                 <th style="width:15%">Qté</th>
-                <th style="width:20%">Prix unitaire (GNF)</th>
+                <th style="width:20%">Prix unitaire (USD $)</th>
                 <th style="width:15%">Total</th>
                 <th style="width:3%"></th>
               </tr>
@@ -1042,7 +1045,7 @@
 
           <div class="totals-box">
             <div class="totals-inner">
-              <div class="total-row grand"><span>TOTAL NET (sans TVA)</span><span id="tp-total">0 GNF</span></div>
+              <div class="total-row grand"><span>TOTAL NET (sans TVA)</span><span id="tp-total">0 $</span></div>
             </div>
           </div>
 
@@ -1059,7 +1062,7 @@
               </div>
               <div class="field">
                 <label>Reste à payer</label>
-                <input type="text" id="tp-reste" value="0 GNF" readonly style="background:#e8f5ee;font-weight:700;color:var(--vert);border-color:var(--vert)">
+                <input type="text" id="tp-reste" value="0 $" readonly style="background:#e8f5ee;font-weight:700;color:var(--vert);border-color:var(--vert)">
               </div>
               <div class="field" style="display:flex;align-items:flex-end;">
                 <button type="button" class="btn btn-outline btn-sm" style="width:100%;" onclick="soldeTransport()">✅ Marquer le solde payé</button>
@@ -1182,7 +1185,7 @@
               <tr>
                 <th style="width:50%">Désignation</th>
                 <th style="width:15%">Qté</th>
-                <th style="width:20%">Prix unitaire (GNF)</th>
+                <th style="width:20%">Prix unitaire (USD $)</th>
                 <th style="width:15%">Total</th>
                 <th style="width:3%"></th>
               </tr>
@@ -1200,7 +1203,7 @@
 
           <div class="totals-box">
             <div class="totals-inner">
-              <div class="total-row grand"><span>TOTAL NET (sans TVA)</span><span id="dn-total">0 GNF</span></div>
+              <div class="total-row grand"><span>TOTAL NET (sans TVA)</span><span id="dn-total">0 $</span></div>
             </div>
           </div>
         </div>
@@ -1319,15 +1322,15 @@
 
         <hr class="separator">
         <div class="form-grid-3">
-          <div class="field">
+          <div class="field" style="display:none">
             <label>Devise de saisie</label>
             <select id="tr-devise" onchange="calcTransit()">
               <option value="USD">USD ($)</option>
               <option value="GNF">GNF</option>
             </select>
           </div>
-          <div class="field">
-            <label>Taux de change (1 USD = ? GNF)</label>
+          <div class="field" style="display:none">
+            <label>Taux de change (1 USD = ? $)</label>
             <input type="number" id="tr-taux" value="8700" min="0" step="1" oninput="calcTransit()">
           </div>
           <div class="field">
@@ -1351,7 +1354,7 @@
                 <th style="width:6%">✓</th>
                 <th style="width:44%">Poste de transit</th>
                 <th style="width:20%">Montant <span id="tr-devise-lbl">(USD)</span></th>
-                <th style="width:24%">Total GNF</th>
+                <th style="width:24%">Total USD $</th>
                 <th style="width:3%"></th>
               </tr>
             </thead>
@@ -1438,7 +1441,7 @@
 
           <div class="totals-box">
             <div class="totals-inner">
-              <div class="total-row grand"><span>TOTAL FRAIS DE TRANSIT</span><span id="tr-total">0 GNF</span></div>
+              <div class="total-row grand"><span>TOTAL FRAIS DE TRANSIT</span><span id="tr-total">0 $</span></div>
             </div>
           </div>
         </div>
@@ -1446,12 +1449,12 @@
         <hr class="separator">
         <div class="form-grid">
           <div class="field">
-            <label>Montant versé (GNF)</label>
+            <label>Montant versé (USD $)</label>
             <input type="number" id="tr-verse" value="0" min="0" oninput="calcPaiementTransit()">
           </div>
           <div class="field">
             <label>Reste à payer</label>
-            <input type="text" id="tr-reste" value="0 GNF" readonly style="background:#f7f7f7;font-weight:700;">
+            <input type="text" id="tr-reste" value="0 $" readonly style="background:#f7f7f7;font-weight:700;">
           </div>
           <div class="field">
             <label>Statut du paiement</label>
@@ -1575,7 +1578,7 @@
       </div>
       <div style="background:#fff;border:1px solid var(--gris-clair);border-radius:10px;padding:12px 20px;display:flex;gap:10px;align-items:center;">
         <span style="font-size:22px;">💰</span>
-        <div><div style="font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:.08em">Valeur stock</div><div style="font-size:18px;font-weight:700;color:var(--or)" id="v-stat-valeur">0 GNF</div></div>
+        <div><div style="font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:.08em">Valeur stock</div><div style="font-size:18px;font-weight:700;color:var(--or)" id="v-stat-valeur">$0</div></div>
       </div>
     </div>
     <div class="voiture-grid" id="voiture-grid"></div>
@@ -1599,7 +1602,7 @@
       </div>
       <div style="background:#fff;border:1px solid var(--gris-clair);border-radius:10px;padding:12px 20px;display:flex;gap:10px;align-items:center;">
         <span style="font-size:22px;">💰</span>
-        <div><div style="font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:.08em">Chiffre total</div><div style="font-size:16px;font-weight:700;color:var(--vert)" id="c-stat-ca">0 GNF</div></div>
+        <div><div style="font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:.08em">Chiffre total</div><div style="font-size:16px;font-weight:700;color:var(--vert)" id="c-stat-ca">0 $</div></div>
       </div>
     </div>
     <div id="clients-list" class="doc-list">
@@ -1607,10 +1610,10 @@
     </div>
   </div>
 
-  <!-- PAGE DÉPENSES EN GNF -->
+  <!-- PAGE DÉPENSES EN USD -->
   <div class="page" id="page-depenses">
     <div class="form-card">
-      <div class="form-header"><h2>➕ Nouvelle Dépense en GNF</h2></div>
+      <div class="form-header"><h2>➕ Nouvelle Dépense en USD</h2></div>
       <div style="padding:20px 28px;">
         <div class="form-grid-3">
           <div class="field">
@@ -1618,7 +1621,7 @@
             <input type="date" id="dep-date" style="border-color:var(--or)">
           </div>
           <div class="field">
-            <label>Montant (GNF)</label>
+            <label>Montant (USD $)</label>
             <input type="number" id="dep-montant" placeholder="0" style="border-color:var(--or);font-weight:700;font-size:15px">
           </div>
           <div class="field">
@@ -1635,7 +1638,7 @@
       <div class="form-header"><h2>📋 Historique des Dépenses</h2></div>
       <div style="padding:20px 28px;">
         <div style="background:#fff3e0;border:1px solid #ff9800;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-weight:700;color:#ff9800;">
-          💰 Total Dépenses : <span id="total-depenses">0 GNF</span>
+          💰 Total Dépenses : <span id="total-depenses">0 $</span>
         </div>
         <div id="depenses-list" class="doc-list">
           <div style="text-align:center;padding:40px;color:var(--gris);">Aucune dépense enregistrée.</div>
@@ -1761,7 +1764,7 @@
           </select>
         </div>
         <div class="field">
-          <label>Prix de vente (GNF) *</label>
+          <label>Prix de vente (USD $) *</label>
           <input type="number" id="vf-prix" placeholder="0">
         </div>
         <div class="field">
@@ -1978,7 +1981,7 @@ const pageTitles = {
   liste: 'Tous les documents',
   voitures: 'Stock de véhicules',
   clients: 'Base clients',
-  depenses: 'Dépenses en GNF',
+  depenses: 'Dépenses en USD',
   depots: 'Dépôts en Dollar'
 };
 
@@ -2038,7 +2041,7 @@ function calcRow(inp, prefix) {
 function calcTotals(prefix) {
   let ht = 0;
   document.querySelectorAll(`#${prefix}-items .row-total`).forEach(td => {
-    ht += parseFloat(td.textContent.replace(/\s/g,'').replace('GNF','').replace(/,/g,'')) || 0;
+    ht += parseFloat(td.textContent.replace(/\s/g,'').replace('$','').replace(/,/g,'')) || 0;
   });
   const tvaEl = document.getElementById(`${prefix}-tva`);
   const tva = tvaEl ? (parseFloat(tvaEl.value) || 0) : 0;
@@ -2048,10 +2051,10 @@ function calcTotals(prefix) {
   const total = ht + tvaVal - acompte;
 
   const htEl = document.getElementById(`${prefix}-ht`);
-  if (htEl) htEl.textContent = fmt(ht) + ' GNF';
+  if (htEl) htEl.textContent = fmt(ht) + ' $';
   const tvaValEl = document.getElementById(`${prefix}-tva-val`);
-  if (tvaValEl) tvaValEl.textContent = fmt(tvaVal) + ' GNF';
-  document.getElementById(`${prefix}-total`).textContent = fmt(total) + ' GNF';
+  if (tvaValEl) tvaValEl.textContent = fmt(tvaVal) + ' $';
+  document.getElementById(`${prefix}-total`).textContent = fmt(total) + ' $';
   if (prefix === 'rc') calcPaiement();
   if (prefix === 'tp') calcPaiementTransport();
 }
@@ -2059,10 +2062,10 @@ function calcTotals(prefix) {
 function calcPaiement() {
   const totalEl = document.getElementById('rc-total');
   if (!totalEl) return;
-  const total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('GNF','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
+  const total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('$','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
   const verse = parseFloat(document.getElementById('rc-verse').value) || 0;
   const reste = Math.max(0, total - verse);
-  document.getElementById('rc-reste').value = fmt(reste) + ' GNF';
+  document.getElementById('rc-reste').value = fmt(reste) + ' $';
   const statut = document.getElementById('rc-paiement-statut');
   if (verse >= total && total > 0) statut.value = 'complet';
   else if (verse > 0) statut.value = 'partiel';
@@ -2072,11 +2075,11 @@ function calcPaiementTransport() {
   const totalEl = document.getElementById('tp-total');
   const badge = document.getElementById('tp-paiement-badge');
   if (!totalEl || !badge) return;
-  const total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('GNF','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
+  const total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('$','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
   const verseEl = document.getElementById('tp-verse');
   const verse = parseFloat(verseEl.value) || 0;
   const reste = Math.max(0, total - verse);
-  document.getElementById('tp-reste').value = fmt(reste) + ' GNF';
+  document.getElementById('tp-reste').value = fmt(reste) + ' $';
 
   window._tpPaiementStatut = 'non_paye';
   if (total <= 0) {
@@ -2100,14 +2103,14 @@ function calcPaiementTransport() {
 function soldeTransport() {
   const totalEl = document.getElementById('tp-total');
   if (!totalEl) return;
-  const total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('GNF','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
+  const total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('$','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
   document.getElementById('tp-verse').value = total;
   calcPaiementTransport();
   showToast('✅ Solde marqué comme payé');
 }
 
 function fmt(n) {
-  return Math.round(n).toLocaleString('fr-FR');
+  return (Math.round((Number(n)||0)*100)/100).toLocaleString('en-US',{maximumFractionDigits:2}).replace(/,/g,' ');
 }
 
 function addRow(prefix) {
@@ -2179,7 +2182,7 @@ function collectProforma() {
     kmEtat: document.getElementById('pf-km-etat').value,
     kmType: document.getElementById('pf-km-type').value,
     photo: window._pfPhoto || null,
-    createdAt: new Date().toISOString()
+    _usd: true, createdAt: new Date().toISOString()
   };
 }
 
@@ -2221,7 +2224,7 @@ function collectRecu() {
     kmEtat: document.getElementById('rc-km-etat').value,
     kmType: document.getElementById('rc-km-type').value,
     photo: window._rcPhoto || null,
-    createdAt: new Date().toISOString()
+    _usd: true, createdAt: new Date().toISOString()
   };
 }
 
@@ -2255,7 +2258,7 @@ function collectTransport() {
     kmEtat: document.getElementById('tp-km-etat').value,
     kmType: document.getElementById('tp-km-type').value,
     photo: window._tpPhoto || null,
-    createdAt: new Date().toISOString()
+    _usd: true, createdAt: new Date().toISOString()
   };
 }
 
@@ -2287,7 +2290,7 @@ function collectDouane() {
     kmEtat: document.getElementById('dn-km-etat').value,
     kmType: document.getElementById('dn-km-type').value,
     photo: window._dnPhoto || null,
-    createdAt: new Date().toISOString()
+    _usd: true, createdAt: new Date().toISOString()
   };
 }
 
@@ -2308,37 +2311,35 @@ function buildDocHTML(doc, preview=false) {
   let tableHead, itemsRows;
   if (isProforma) {
     tableHead = `<tr><th>Désignation</th><th>Année</th><th>Qté</th><th>Prix unit.</th><th>Total</th></tr>`;
-    itemsRows = doc.items.map(it => `<tr><td>${it.designation}</td><td>${it.annee}</td><td>${it.qty}</td><td>${fmt(it.prix)} GNF</td><td><strong>${it.total} GNF</strong></td></tr>`).join('');
+    itemsRows = doc.items.map(it => `<tr><td>${it.designation}</td><td>${it.annee}</td><td>${it.qty}</td><td>${fmt(it.prix)} $</td><td><strong>${it.total} $</strong></td></tr>`).join('');
   } else if (isRecu) {
     tableHead = `<tr><th>Désignation</th><th>Année</th><th>Couleur</th><th>Qté</th><th>Prix unit.</th><th>Total</th></tr>`;
-    itemsRows = doc.items.map(it => `<tr><td>${it.designation}</td><td>${it.annee}</td><td>${it.couleur||'-'}</td><td>${it.qty}</td><td>${fmt(it.prix)} GNF</td><td><strong>${it.total} GNF</strong></td></tr>`).join('');
+    itemsRows = doc.items.map(it => `<tr><td>${it.designation}</td><td>${it.annee}</td><td>${it.couleur||'-'}</td><td>${it.qty}</td><td>${fmt(it.prix)} $</td><td><strong>${it.total} $</strong></td></tr>`).join('');
   } else {
     // transport / douane : facture simplifiée, sans TVA
     tableHead = `<tr><th>Désignation</th><th>Qté</th><th>Prix unit.</th><th>Total</th></tr>`;
-    itemsRows = doc.items.map(it => `<tr><td>${it.designation}</td><td>${it.qty}</td><td>${fmt(it.prix)} GNF</td><td><strong>${it.total} GNF</strong></td></tr>`).join('');
+    itemsRows = doc.items.map(it => `<tr><td>${it.designation}</td><td>${it.qty}</td><td>${fmt(it.prix)} $</td><td><strong>${it.total} $</strong></td></tr>`).join('');
   }
 
   const paiementStatutLabel = { partiel: '⚠️ Paiement partiel', complet: '✅ Soldé – Paiement complet', avance: '🔄 Avance / Acompte' };
   let extra = '';
   if (isProforma) {
     extra = `<div class="doc-pdf-total-row"><span>Validité</span><span>${doc.valid || '-'}</span></div>
-       <div class="doc-pdf-total-row"><span>Acompte versé</span><span>${fmt(doc.acompte||0)} GNF</span></div>`;
+       <div class="doc-pdf-total-row"><span>Acompte versé</span><span>${fmt(doc.acompte||0)} $</span></div>`;
   } else if (isRecu) {
     extra = `<div class="doc-pdf-total-row"><span>Mode de paiement</span><span>${doc.mode||'—'}</span></div>
-       <div class="doc-pdf-total-row"><span>Montant versé</span><span style="color:#1E7E5A;font-weight:700">${fmt(doc.verse||0)} GNF</span></div>
-       <div class="doc-pdf-total-row"><span>Reste à payer</span><span style="color:${parseFloat(doc.verse||0) >= parseFloat((doc.reste||'1').replace(/[^\d]/g,'')) ? '#1E7E5A' : '#C0392B'};font-weight:700">${doc.reste||'0 GNF'}</span></div>
+       <div class="doc-pdf-total-row"><span>Montant versé</span><span style="color:#1E7E5A;font-weight:700">${fmt(doc.verse||0)} $</span></div>
+       <div class="doc-pdf-total-row"><span>Reste à payer</span><span style="color:${parseFloat(doc.verse||0) >= parseFloat((doc.reste||'1').replace(/[^\d.]/g,'')) ? '#1E7E5A' : '#C0392B'};font-weight:700">${doc.reste||'0 $'}</span></div>
        <div class="doc-pdf-total-row"><span>Statut</span><span style="font-weight:700">${paiementStatutLabel[doc.paiementStatut]||'—'}</span></div>`;
   } else if (isTransport && doc.verse != null) {
-    extra = `<div class="doc-pdf-total-row"><span>Montant versé</span><span style="color:#1E7E5A;font-weight:700">${fmt(doc.verse||0)} GNF</span></div>
-       <div class="doc-pdf-total-row"><span>Reste à payer</span><span style="color:${parseFloat(doc.verse||0) >= parseFloat((doc.reste||'1').replace(/[^\d]/g,'')) ? '#1E7E5A' : '#C0392B'};font-weight:700">${doc.reste||'0 GNF'}</span></div>
+    extra = `<div class="doc-pdf-total-row"><span>Montant versé</span><span style="color:#1E7E5A;font-weight:700">${fmt(doc.verse||0)} $</span></div>
+       <div class="doc-pdf-total-row"><span>Reste à payer</span><span style="color:${parseFloat(doc.verse||0) >= parseFloat((doc.reste||'1').replace(/[^\d.]/g,'')) ? '#1E7E5A' : '#C0392B'};font-weight:700">${doc.reste||'0 $'}</span></div>
        <div class="doc-pdf-total-row"><span>Statut</span><span style="font-weight:700">${{non_paye:'❌ Non payé',partiel:'⚠️ Paiement partiel',complet:'✅ Soldé – Payé'}[doc.paiementStatut]||'—'}</span></div>`;
   } else if (isDouane && doc.declaration) {
     extra = `<div class="doc-pdf-total-row"><span>N° déclaration douanière</span><span>${doc.declaration}</span></div>`;
   } else if (isTransitFrais) {
-    extra = `${doc.devise === 'USD' && doc.subDevise ? `<div class="doc-pdf-total-row"><span>Total en devise</span><span>${doc.subDevise}</span></div>
-       <div class="doc-pdf-total-row"><span>Taux de change appliqué</span><span>1 USD = ${fmt(doc.taux||0)} GNF</span></div>` : ''}
-       <div class="doc-pdf-total-row"><span>Montant versé</span><span style="color:#1E7E5A;font-weight:700">${fmt(doc.verse||0)} GNF</span></div>
-       <div class="doc-pdf-total-row"><span>Reste à payer</span><span style="color:${(doc.paiementStatut==='complet')?'#1E7E5A':'#C0392B'};font-weight:700">${doc.reste||'0 GNF'}</span></div>
+    extra = `       <div class="doc-pdf-total-row"><span>Montant versé</span><span style="color:#1E7E5A;font-weight:700">${fmt(doc.verse||0)} $</span></div>
+       <div class="doc-pdf-total-row"><span>Reste à payer</span><span style="color:${(doc.paiementStatut==='complet')?'#1E7E5A':'#C0392B'};font-weight:700">${doc.reste||'0 $'}</span></div>
        <div class="doc-pdf-total-row"><span>Statut</span><span style="font-weight:700">${{non_paye:'❌ Non payé',partiel:'⚠️ Paiement partiel',complet:'✅ Soldé – Payé'}[doc.paiementStatut]||'—'}</span></div>`;
   }
 
@@ -2642,9 +2643,9 @@ function calcTransit() {
   var tbody = document.getElementById('tr-items');
   if (!tbody) return;
   var deviseEl = document.getElementById('tr-devise');
-  var devise = deviseEl ? deviseEl.value : 'USD';
-  var taux = parseFloat((document.getElementById('tr-taux') || {}).value) || 0;
-  var facteur = (devise === 'USD') ? taux : 1;
+  var devise = 'USD';
+  var taux = 1;
+  var facteur = 1;
 
   var lbl = document.getElementById('tr-devise-lbl');
   if (lbl) lbl.textContent = '(' + devise + ')';
@@ -2662,11 +2663,9 @@ function calcTransit() {
   });
 
   var subEl = document.getElementById('tr-sub');
-  if (subEl) subEl.value = (devise === 'USD')
-    ? sub.toLocaleString('fr-FR', {maximumFractionDigits:2}) + ' $'
-    : fmt(sub) + ' GNF';
+  if (subEl) subEl.value = fmt(sub) + ' $';
   var totEl = document.getElementById('tr-total');
-  if (totEl) totEl.textContent = fmt(totalGnf) + ' GNF';
+  if (totEl) totEl.textContent = fmt(totalGnf) + ' $';
 
   calcPaiementTransit();
 }
@@ -2675,11 +2674,11 @@ function calcPaiementTransit() {
   var totalEl = document.getElementById('tr-total');
   var badge = document.getElementById('tr-paiement-badge');
   if (!totalEl || !badge) return;
-  var total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('GNF','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
+  var total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('$','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
   var verse = parseFloat((document.getElementById('tr-verse') || {}).value) || 0;
   var reste = Math.max(0, total - verse);
   var resteEl = document.getElementById('tr-reste');
-  if (resteEl) resteEl.value = fmt(reste) + ' GNF';
+  if (resteEl) resteEl.value = fmt(reste) + ' $';
 
   window._trPaiementStatut = 'non_paye';
   if (total <= 0) {
@@ -2702,16 +2701,16 @@ function calcPaiementTransit() {
 function soldeTransit() {
   var totalEl = document.getElementById('tr-total');
   if (!totalEl) return;
-  var total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('GNF','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
+  var total = parseFloat(totalEl.textContent.replace(/\s/g,'').replace('$','').replace(/,/g,'').replace(/\u202f/g,'')) || 0;
   document.getElementById('tr-verse').value = total;
   calcPaiementTransit();
   showToast('\u2705 Solde marqué comme payé');
 }
 
 function collectTransit() {
-  var devise = (document.getElementById('tr-devise') || {}).value || 'USD';
-  var taux = parseFloat((document.getElementById('tr-taux') || {}).value) || 0;
-  var facteur = (devise === 'USD') ? taux : 1;
+  var devise = 'USD';
+  var taux = 1;
+  var facteur = 1;
 
   var items = [];
   document.querySelectorAll('#tr-items tr').forEach(function(tr) {
@@ -2720,7 +2719,7 @@ function collectTransit() {
     var label = ((tr.querySelector('.tr-lbl') || {}).value || '').trim();
     var amt = parseFloat((tr.querySelector('.tr-amt') || {}).value) || 0;
     if (!label) return;
-    var gnf = Math.round(amt * facteur);
+    var gnf = Math.round(amt * facteur * 100) / 100;
     items.push({
       designation: label,
       qty: 1,
@@ -2753,7 +2752,7 @@ function collectTransit() {
     paiementStatut: window._trPaiementStatut || 'non_paye',
     notes: document.getElementById('tr-notes').value,
     photo: window._trPhoto || null,
-    createdAt: new Date().toISOString()
+    _usd: true, createdAt: new Date().toISOString()
   };
 }
 
@@ -2905,7 +2904,7 @@ function shareWhatsApp() {
   const extraLine = doc.type === 'proforma' ? `⏳ Valable jusqu'au : ${doc.valid || '—'}`
     : doc.type === 'recu' ? `💳 Mode de paiement : ${doc.mode || '—'}`
     : doc.type === 'transport' && doc.verse != null
-      ? `💳 Versé : *${fmt(doc.verse||0)} GNF*\n💰 Reste à payer : *${doc.reste||'0 GNF'}*\n📌 Statut : *${paiementLabels[doc.paiementStatut] || '—'}*`
+      ? `💳 Versé : *${fmt(doc.verse||0)} $*\n💰 Reste à payer : *${doc.reste||'0 $'}*\n📌 Statut : *${paiementLabels[doc.paiementStatut] || '—'}*`
     : doc.refPf ? `🔗 Réf. Proforma : ${doc.refPf}` : '';
   const message =
 `🚗 *AFRICA VISION MULTISERVICES*
@@ -2945,7 +2944,7 @@ function shareEmail() {
   const subject = `${type} N° ${doc.num} – Africa Vision Multiservices`;
   const detailLine = doc.type === 'proforma'
     ? `Validité     : ${doc.valid || '—'}
-Acompte versé: ${doc.acompte || 0} GNF`
+Acompte versé: ${doc.acompte || 0} $`
     : doc.type === 'recu'
     ? `Mode paiement: ${doc.mode || '—'}`
     : (doc.refPf ? `Réf. Proforma: ${doc.refPf}` : '');
@@ -3559,12 +3558,12 @@ function debugCA() {
   recus.forEach(function(d){
     var montant = parseFloat((d.verse||'0').toString().replace(/[^\d.]/g,'')) || 0;
     total += montant;
-    lignes.push((d.num || '(sans numéro)') + '  —  ' + fmt(montant) + ' GNF  —  ' + (d.client || '(sans client)'));
+    lignes.push((d.num || '(sans numéro)') + '  —  ' + fmt(montant) + ' $  —  ' + (d.client || '(sans client)'));
   });
   var message = 'DÉTAIL DU CHIFFRE D\'AFFAIRES\n';
   message += recus.length + ' reçu(s) trouvé(s) dans la base :\n\n';
   message += lignes.join('\n');
-  message += '\n\nTOTAL : ' + fmt(total) + ' GNF';
+  message += '\n\nTOTAL : ' + fmt(total) + ' $';
   alert(message);
 }
 
@@ -3574,7 +3573,7 @@ function updateDashboard() {
     ca += parseFloat((d.verse||'0').toString().replace(/[^\d.]/g,'')) || 0;
   });
   const caEl = document.getElementById('stat-ca');
-  if (caEl) caEl.textContent = fmt(ca) + ' GNF';
+  if (caEl) caEl.textContent = fmt(ca) + ' $';
   const pfCount = documents.filter(d=>d.type==='proforma').length;
   const rcCount = documents.filter(d=>d.type==='recu').length;
   document.getElementById('stat-proforma').textContent = pfCount;
@@ -3598,7 +3597,7 @@ function updateDashboard() {
     totalDepotDollar += parseFloat(d.montant || 0);
   });
   const depenseEl = document.getElementById('stat-depense-gnf');
-  if (depenseEl) depenseEl.textContent = fmt(totalDepenseGNF) + ' GNF';
+  if (depenseEl) depenseEl.textContent = fmt(totalDepenseGNF) + ' $';
   const depotEl = document.getElementById('stat-depot-dollar');
   if (depotEl) depotEl.textContent = fmt(totalDepotDollar) + ' USD';
 
@@ -3632,7 +3631,7 @@ function renderVoitures() {
   document.getElementById('v-stat-dispo').textContent = voitures.filter(v=>v.stock>0).length;
   document.getElementById('v-stat-rupture').textContent = voitures.filter(v=>v.stock===0).length;
   const valeur = voitures.reduce((s,v)=>s+(parseFloat(v.prix)||0)*(parseInt(v.stock)||0),0);
-  document.getElementById('v-stat-valeur').textContent = fmt(valeur)+' GNF';
+  document.getElementById('v-stat-valeur').textContent = '$'+fmt(valeur);
   document.getElementById('stat-stock').textContent = voitures.filter(v=>v.stock>0).length;
 
   const grid = document.getElementById('voiture-grid');
@@ -3656,7 +3655,7 @@ function renderVoitures() {
       <div class="voiture-info">
         <div class="voiture-nom">${v.nom}</div>
         <div class="voiture-annee">Année ${v.annee||'—'} · ${v.origine||''}</div>
-        <div class="voiture-prix">${fmt(v.prix)} GNF</div>
+        <div class="voiture-prix">$${fmt(v.prix)}</div>
         <div class="voiture-specs">
           ${v.carburant ? `<span class="voiture-spec">⛽ ${v.carburant}</span>` : ''}
           ${v.boite ? `<span class="voiture-spec">⚙️ ${v.boite}</span>` : ''}
@@ -3697,7 +3696,7 @@ function openVoitureDetail(id) {
           <div style="font-size:14px;color:var(--gris);margin-top:2px;">Année ${v.annee||'—'} · ${v.type||''} · ${v.origine||''}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:26px;font-weight:800;color:var(--or)">${fmt(v.prix)} GNF</div>
+          <div style="font-size:26px;font-weight:800;color:var(--or)">$${fmt(v.prix)}</div>
           <div style="display:inline-block;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:800;background:${sc.bg};color:${sc.color};margin-top:4px;">${sc.label}</div>
         </div>
       </div>
@@ -3811,7 +3810,7 @@ function saveVoiture() {
   const editId = document.getElementById('vf-edit-id').value;
 
   const data = {
-    nom, prix, stock,
+    nom, prix, stock, _usd: true,
     annee: document.getElementById('vf-annee').value,
     couleur: document.getElementById('vf-couleur').value,
     carburant: document.getElementById('vf-carburant').value,
@@ -3874,7 +3873,7 @@ function creerProformaVoiture(id) {
 }
 
 function partagerVoitureWA(v) {
-  const msg = `🚗 *AFRICA VISION MULTISERVICES*\n🏷️ *Véhicule disponible*\n━━━━━━━━━━━━━━━━━━\n*${v.nom}* — Année ${v.annee||'—'}\n💰 Prix : *${fmt(v.prix)} GNF*\n⛽ ${v.carburant||''} | ⚙️ ${v.boite||''} | 🎨 ${v.couleur||''}\n📦 Stock : ${v.stock} unité(s)\n━━━━━━━━━━━━━━━━━━\n📞 +224 625 81 36 46\n🌐 africavisioncargo.com\n📍 Madina – Sonfonia, Conakry`;
+  const msg = `🚗 *AFRICA VISION MULTISERVICES*\n🏷️ *Véhicule disponible*\n━━━━━━━━━━━━━━━━━━\n*${v.nom}* — Année ${v.annee||'—'}\n💰 Prix : *$${fmt(v.prix)}*\n⛽ ${v.carburant||''} | ⚙️ ${v.boite||''} | 🎨 ${v.couleur||''}\n📦 Stock : ${v.stock} unité(s)\n━━━━━━━━━━━━━━━━━━\n📞 +224 625 81 36 46\n🌐 africavisioncargo.com\n📍 Madina – Sonfonia, Conakry`;
   window.open(`https://wa.me/224625813646?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
@@ -3920,7 +3919,7 @@ function renderClients(search='') {
   document.getElementById('c-stat-total').textContent = allClients.length;
   document.getElementById('c-stat-docs').textContent = documents.length;
   const totalCA = allClients.reduce((s,c)=>s+c.totalAchats,0);
-  document.getElementById('c-stat-ca').textContent = fmt(totalCA)+' GNF';
+  document.getElementById('c-stat-ca').textContent = fmt(totalCA)+' $';
 
   const list = document.getElementById('clients-list');
   if (!clients.length) {
@@ -3951,7 +3950,7 @@ function renderClients(search='') {
         </div>
       </div>
       <div style="text-align:right;margin-left:12px;">
-        <div style="font-size:15px;font-weight:800;color:var(--or)">${fmt(c.totalAchats)} GNF</div>
+        <div style="font-size:15px;font-weight:800;color:var(--or)">${fmt(c.totalAchats)} $</div>
         <div style="font-size:11px;color:var(--gris);margin-top:2px;">${nbDocs} doc(s)</div>
         <div style="margin-top:8px;display:flex;gap:6px;justify-content:flex-end;">
           <button class="btn btn-sm" style="background:#25D366;color:#fff;font-size:11px;padding:5px 10px" onclick="event.stopPropagation();waClient('${encodeURIComponent(c.tel)}')">📲</button>
@@ -3998,7 +3997,7 @@ function openClientDetail(nomEncoded) {
           <div style="font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:.08em">Documents</div>
         </div>
         <div style="background:#f0faf5;border:1px solid #c3e6d4;border-radius:8px;padding:14px;text-align:center;">
-          <div style="font-size:22px;font-weight:800;color:var(--vert)">${fmt(c.totalAchats)} GNF</div>
+          <div style="font-size:22px;font-weight:800;color:var(--vert)">${fmt(c.totalAchats)} $</div>
           <div style="font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:.08em">Total payé</div>
         </div>
         <div style="background:#fdf3dc;border:1px solid #f0d99a;border-radius:8px;padding:14px;text-align:center;">
@@ -4561,7 +4560,7 @@ async function saveDépense() {
     date,
     montant,
     desc,
-    createdAt: new Date().toISOString()
+    _usd: true, createdAt: new Date().toISOString()
   };
   
   depenses.unshift(dep);
@@ -4711,7 +4710,7 @@ function renderDépenses() {
   depenses.forEach(d => { totalDep += parseFloat(d.montant || 0); });
   
   const totalEl = document.getElementById('total-depenses');
-  if (totalEl) totalEl.textContent = fmt(totalDep) + ' GNF';
+  if (totalEl) totalEl.textContent = fmt(totalDep) + ' $';
   
   if (depenses.length === 0) {
     list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gris);">Aucune dépense enregistrée.</div>';
@@ -4722,7 +4721,7 @@ function renderDépenses() {
     <div style="background:#fff;border:1px solid #ffe0b2;border-radius:8px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-weight:700;color:#ff9800;">${d.date} — ${d.desc}</div>
-        <div style="font-size:12px;color:var(--gris);">${fmt(d.montant)} GNF</div>
+        <div style="font-size:12px;color:var(--gris);">${fmt(d.montant)} $</div>
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-sm" style="background:#fff3cd;color:#856404" onclick="editDépense(${d.id})">✏️ Modifier</button>
@@ -4834,6 +4833,55 @@ async function loadDépensesEtDépôts() {
     try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) {}
     try { localStorage.setItem('av_depots', JSON.stringify(depots)); } catch(e) {}
   } catch(e) { console.log('Firebase load error:', e); }
+}
+
+// ══ MIGRATION GNF → USD (une seule fois par élément, grâce au drapeau _usd) ══
+async function convertirDonneesUSD() {
+  var r = prompt('Taux de change : 1 USD = combien de GNF ?\n(les anciens montants en GNF seront divisés par ce taux)', '8700');
+  if (r === null) return;
+  var taux = parseFloat(String(r).replace(/\s/g,'').replace(',','.'));
+  if (!taux || taux <= 0) { alert('Taux invalide.'); return; }
+  if (!confirm('Convertir tous les anciens montants GNF en dollars au taux de 1 USD = ' + taux + ' GNF ?\nLes éléments déjà convertis seront ignorés. Faites cette opération UNE seule fois.')) return;
+
+  var c2 = function(x){ return Math.round(x*100)/100; };
+  var num = function(x){ return parseFloat(String(x==null?'0':x).replace(/[^\d]/g,'')) || 0; };   // ancien format entier
+  var conv = function(x){ return c2(num(x)/taux); };
+  var str = function(x){ return fmt(conv(x)) + ' $'; };
+  var nd = 0, nv = 0, ne = 0;
+
+  documents.forEach(function(d){
+    if (d._usd) return;
+    (d.items||[]).forEach(function(it){
+      var prix;
+      if (it.montantDevise !== undefined && it.devise === 'USD') prix = c2(parseFloat(it.montantDevise)||0);
+      else if (it.montantDevise !== undefined) prix = c2((parseFloat(it.montantDevise)||0)/taux);
+      else prix = conv(it.prix);
+      it.prix = prix;
+      it.total = fmt(prix * (parseFloat(it.qty)||1));
+      it.devise = 'USD'; it.montantDevise = prix;
+    });
+    ['ht','tvaVal','total','reste'].forEach(function(k){ if (d[k] !== undefined && d[k] !== '') d[k] = str(d[k]); });
+    ['acompte','verse'].forEach(function(k){ if (d[k] !== undefined && d[k] !== '') d[k] = conv(d[k]); });
+    d.devise = 'USD'; d.taux = 1; d.subDevise = '';
+    d._usd = true; nd++;
+  });
+
+  voitures.forEach(function(v){ if (v._usd) return; v.prix = conv(v.prix); v._usd = true; nv++; });
+  depenses.forEach(function(x){ if (x._usd) return; x.montant = conv(x.montant); x._usd = true; ne++; });
+
+  try { localStorage.setItem('av_docs', JSON.stringify(documents)); } catch(e) {}
+  try { localStorage.setItem('av_voitures', JSON.stringify(voitures)); } catch(e) {}
+  try { localStorage.setItem('av_depenses', JSON.stringify(depenses)); } catch(e) {}
+
+  if (window._avFbOn) {
+    try {
+      await window._avSaveDocs();
+      await window._avSaveVoit();
+      for (var i=0; i<depenses.length; i++) await fbPut('depenses', 'dep-' + depenses[i].id, depenses[i]);
+    } catch(e) { console.log('Firebase migration error:', e); alert('Converti localement, mais erreur de synchronisation Firebase : ' + e.message); }
+  }
+  alert('✅ Conversion terminée :\n' + nd + ' documents, ' + nv + ' véhicules, ' + ne + ' dépenses.');
+  location.reload();
 }
 
 // Hamburger visible on ALL screen sizes
