@@ -4985,6 +4985,8 @@ function r2(x) { return Math.round(x*100)/100; }
 function docDue(doc) {
   var total = parseMontant(doc.total);
   var verse = parseMontant(doc.verse);
+  // Une proforma n'est qu'un devis : rien à encaisser (on crée un reçu quand le client achète)
+  if (doc.type === 'proforma') return { total: total, verse: 0, rest: 0 };
   return { total: total, verse: verse, rest: total > 0 ? Math.max(0, r2(total - verse)) : 0 };
 }
 
@@ -5047,7 +5049,7 @@ async function confirmerEncaisser() {
 }
 
 function extraPaiementDoc(doc) {
-  if ((doc.type !== 'proforma' && doc.type !== 'douane') || !parseMontant(doc.verse)) return '';
+  if (doc.type !== 'douane' || !parseMontant(doc.verse)) return '';
   var d = docDue(doc);
   return '<div class="doc-pdf-total-row"><span>Montant versé</span><span style="color:#1E7E5A;font-weight:700">' + fmt(d.verse) + ' $</span></div>'
        + '<div class="doc-pdf-total-row"><span>Reste à payer</span><span style="color:' + (d.rest <= 0.005 ? '#1E7E5A' : '#C0392B') + ';font-weight:700">' + fmt(d.rest) + ' $</span></div>';
@@ -5078,14 +5080,6 @@ function rappelClients() {
       if (d.type === 'transit' && (d.conteneur || d.navire)) transit.push(d);
       var r = docDue(d).rest;
       if (r <= 0.005) return;
-      if (d.type === 'proforma') {
-        var des = d.items && d.items[0] ? d.items[0].designation : '';
-        var couvert = documents.some(function(x) {
-          return x.type === 'recu' && x.client && x.client.trim().toLowerCase() === k &&
-            (x.refPf === d.num || (des && x.items && x.items[0] && x.items[0].designation === des));
-        });
-        if (couvert) return;
-      }
       du += r;
       lignes.push({ doc: d, rest: r });
     });
