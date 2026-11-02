@@ -108,6 +108,30 @@
   .page { display: none; padding: 40px 32px 32px; }
   .page.active { display: block; }
 
+  /* ── ENCAISSER / RAPPELS ── */
+  .av-modal-ov { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:2000; display:none; align-items:center; justify-content:center; padding:16px; }
+  .av-modal-ov.open { display:flex; }
+  .av-modal { background:#fff; border-radius:14px; width:440px; max-width:100%; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+  .av-modal h3 { font-size:17px; margin-bottom:4px; }
+  .av-modal .sub { font-size:12px; color:var(--gris); margin-bottom:14px; }
+  .av-modal label { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--gris); margin:12px 0 4px; }
+  .av-modal input, .av-modal select { width:100%; padding:10px 12px; border:1.5px solid var(--gris-clair); border-radius:8px; font-size:14px; font-family:'Inter',sans-serif; }
+  .av-modal .recap { background:var(--creme); border-radius:8px; padding:10px 14px; font-size:13px; line-height:1.8; }
+  .av-modal .recap b { float:right; }
+  .rp-card { background:#fff; border:1px solid var(--gris-clair); border-left:5px solid var(--or); border-radius:12px; padding:16px 20px; margin-bottom:14px; }
+  .rp-card.urgent { border-left-color:var(--rouge); }
+  .rp-card.ok { border-left-color:var(--vert); }
+  .rp-head { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+  .rp-nom { font-size:16px; font-weight:800; }
+  .rp-tel { font-size:12px; color:var(--gris); }
+  .rp-du { font-size:20px; font-weight:800; color:var(--rouge); text-align:right; }
+  .rp-du.zero { color:var(--vert); }
+  .rp-veh { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:7px 0; border-top:1px dashed var(--gris-clair); font-size:13px; flex-wrap:wrap; }
+  .rp-veh select { padding:6px 8px; border:1.5px solid var(--gris-clair); border-radius:8px; font-size:12px; font-weight:700; }
+  .rp-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center; }
+  .rp-last { font-size:11px; color:var(--gris); margin-left:auto; }
+  .nav-badge { background:var(--rouge); color:#fff; border-radius:10px; font-size:10px; font-weight:800; padding:1px 7px; margin-left:auto; }
+
   /* ── DASHBOARD EN COULEURS ── */
   #page-dashboard .stat-card { color:#fff; border:none !important; border-radius:14px; box-shadow:0 6px 16px rgba(0,0,0,.18); transition:transform .15s; }
   #page-dashboard .stat-card:hover { transform:translateY(-2px); }
@@ -515,6 +539,9 @@
     <button class="nav-btn" onclick="showPage('voitures')">
       <span class="icon">🚗</span> Stock de voitures
     </button>
+    <button class="nav-btn" onclick="showPage('rappels')">
+      <span class="icon">🔔</span> Rappels clients <span class="nav-badge" id="rappel-badge" style="display:none">0</span>
+    </button>
     <button class="nav-btn" onclick="showPage('clients')">
       <span class="icon">👥</span> Clients
     </button>
@@ -559,6 +586,7 @@
 
   <!-- ══════════ PAGE: DASHBOARD ══════════ -->
   <div class="page active" id="page-dashboard">
+    <div id="rappel-banner" onclick="showPage('rappels')" style="display:none;cursor:pointer;background:#fff3e0;border:1px solid #ff9800;border-radius:12px;padding:12px 18px;margin-bottom:18px;font-weight:700;color:#b45f06;"></div>
     <div class="stats-grid">
       <div class="stat-card cc-navy">
         <div class="stat-label">Factures Proforma</div>
@@ -1599,6 +1627,26 @@
     <div class="voiture-grid" id="voiture-grid"></div>
   </div>
 
+  <!-- ══════════ PAGE: RAPPELS CLIENTS ══════════ -->
+  <div class="page" id="page-rappels">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+      <input type="text" id="rappel-search" placeholder="🔍 Rechercher un client..." oninput="renderRappels()"
+        style="padding:9px 14px;border:1.5px solid var(--gris-clair);border-radius:8px;font-size:13px;width:240px;font-family:'Inter',sans-serif">
+      <select id="rappel-filtre" onchange="renderRappels()" style="padding:9px 12px;border:1.5px solid var(--gris-clair);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif">
+        <option value="du">💰 Avec solde dû</option>
+        <option value="relance">⏰ À relancer (&gt; 7 jours)</option>
+        <option value="transit">🚢 En transit</option>
+        <option value="tous">Tous les clients</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+      <div class="stat-card cc-red" style="padding:14px 22px;"><div class="stat-label">Total dû par les clients</div><div class="stat-value" id="rp-total-du" style="font-size:22px">0 $</div></div>
+      <div class="stat-card cc-orange" style="padding:14px 22px;"><div class="stat-label">Clients à relancer</div><div class="stat-value" id="rp-nb-relance" style="font-size:22px">0</div></div>
+      <div class="stat-card cc-blue" style="padding:14px 22px;"><div class="stat-label">Commandes en transit</div><div class="stat-value" id="rp-nb-transit" style="font-size:22px">0</div></div>
+    </div>
+    <div id="rappels-list"></div>
+  </div>
+
   <!-- ══════════ PAGE: CLIENTS ══════════ -->
   <div class="page" id="page-clients">
     <div class="search-bar" style="margin-bottom:20px;">
@@ -1700,6 +1748,30 @@
   </div>
 
 </div><!-- /main -->
+
+<!-- ══════════ MODAL ENCAISSER ══════════ -->
+<div class="av-modal-ov" id="enc-overlay" onclick="if(event.target===this)fermerEncaisser()">
+  <div class="av-modal">
+    <h3>💰 Encaisser un paiement</h3>
+    <div class="sub" id="enc-sub"></div>
+    <div class="recap">
+      <div>Total du document <b id="enc-total">0 $</b></div>
+      <div>Déjà versé <b id="enc-verse" style="color:var(--vert)">0 $</b></div>
+      <div>Reste à payer <b id="enc-reste" style="color:var(--rouge)">0 $</b></div>
+    </div>
+    <label>Montant encaissé (USD $)</label>
+    <input type="number" id="enc-montant" step="0.01" min="0" oninput="majEncaisserApercu()">
+    <label>Mode de paiement</label>
+    <select id="enc-mode"><option>Espèces</option><option>Virement bancaire</option><option>Orange Money</option><option>MTN Mobile Money</option><option>Chèque</option><option>Autre</option></select>
+    <label>Date</label>
+    <input type="date" id="enc-date">
+    <div id="enc-apres" style="font-size:12px;margin-top:12px;font-weight:700;"></div>
+    <div style="display:flex;gap:10px;margin-top:18px;">
+      <button class="btn btn-primary" style="flex:1;background:var(--vert)" onclick="confirmerEncaisser()">✅ Valider l'encaissement</button>
+      <button class="btn btn-outline" onclick="fermerEncaisser()">Annuler</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════ MODAL FICHE VÉHICULE ══════════ -->
 <div class="preview-overlay" id="voiture-detail-overlay">
@@ -1996,6 +2068,7 @@ const pageTitles = {
   liste: 'Tous les documents',
   voitures: 'Stock de véhicules',
   clients: 'Base clients',
+  rappels: 'Rappels clients',
   depenses: 'Dépenses en USD',
   depots: 'Dépôts en Dollar'
 };
@@ -2020,6 +2093,7 @@ function showPage(p) {
   event.currentTarget && event.currentTarget.classList.add('active');
   if (p === 'liste') renderDocList();
   if (p === 'clients') renderClients();
+  if (p === 'rappels') renderRappels();
   if (p === 'voitures') renderVoitures();
   if (p === 'dashboard') updateDashboard();
   if (p === 'depenses') renderDépenses();
@@ -2427,7 +2501,7 @@ function buildDocHTML(doc, preview=false) {
       <div class="doc-pdf-totals-inner">
         ${!isSansTva ? `<div class="doc-pdf-total-row"><span>Sous-total HT</span><span>${doc.ht}</span></div>
         <div class="doc-pdf-total-row"><span>TVA (${doc.tva}%)</span><span>${doc.tvaVal}</span></div>` : ''}
-        ${extra}
+        ${extra}${extraPaiementDoc(doc)}
         <div class="doc-pdf-total-row grand"><span>TOTAL ${isRecu ? 'PAYÉ' : 'NET À PAYER'}</span><span>${doc.total}</span></div>
       </div>
     </div>
@@ -3134,6 +3208,7 @@ function renderDocList(filter='') {
 
 function docItemHTML(doc) {
   const badge = docBadge(doc.type);
+  const due = docDue(doc);
   const canMakeRecu = doc.type === 'proforma' || doc.type === 'transport' || doc.type === 'douane' || doc.type === 'transit';
   const statutCmd = doc.statutCmd ? {en_cours:'⏳',en_transit:'🚢',arrive:'✅'}[doc.statutCmd]||'' : '';
   if (!window._docRegistry) window._docRegistry = {};
@@ -3145,11 +3220,13 @@ function docItemHTML(doc) {
     + '<div class="doc-num">' + (doc.num||'') + ' ' + badge + ' ' + statutCmd + '</div>'
     + '<div class="doc-client">👤 ' + (doc.client || '—') + '</div>'
     + '<div class="doc-meta">📅 ' + (doc.date||'') + ' — ' + (doc.items&&doc.items[0]?doc.items[0].designation:'Vehicule') + '</div>'
+    + (due.rest > 0.005 ? '<div style="font-size:11px;color:#C0392B;font-weight:700;margin-top:2px;">💰 Reste à payer : ' + fmt(due.rest) + ' $</div>' : '')
     + ((doc.type==='recu' || doc.type==='transport') && doc.paiementStatut ? '<div style="font-size:11px;margin-top:2px;">' + ({non_paye:'❌ Non payé',partiel:'⚠️ Partiel',complet:'✅ Soldé',avance:'🔄 Acompte'}[doc.paiementStatut]||'') + '</div>' : '')
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">'
     + '<div class="doc-montant">' + (doc.total||'') + '</div>'
     + '<button class="btn btn-outline btn-sm" data-rk="' + rk + '" data-act="view" onclick="docAction(this)">👁 Voir</button>'
+    + (due.rest > 0.005 ? '<button class="btn btn-sm" style="background:#0B6B5E;color:#fff;font-weight:700" data-rk="' + rk + '" data-act="encaisser" onclick="docAction(this)" title="Encaisser un paiement sans modifier le document">💰 Encaisser</button>' : '')
     + '<button class="btn btn-sm" style="background:#E8A020;color:#fff" data-rk="' + rk + '" data-act="edit" onclick="docAction(this)">✏️</button>'
     + '<button class="btn btn-sm" style="background:#25D366;color:#fff" data-rk="' + rk + '" data-act="wa" onclick="docAction(this)">📲</button>'
     + '<button class="btn btn-sm" style="background:#1A73E8;color:#fff" data-rk="' + rk + '" data-act="email" onclick="docAction(this)">✉️</button>'
@@ -3170,6 +3247,7 @@ function docAction(btn) {
   else if (action === 'email') shareDocEmail(doc);
   else if (action === 'del') deleteDoc(doc);
   else if (action === 'recu') creerRecuDepuisProforma(doc);
+  else if (action === 'encaisser') ouvrirEncaisser(doc);
 }
 
 // ══ BOUTONS "CRÉER ..." DEPUIS L'APERÇU ══
@@ -3583,6 +3661,7 @@ function debugCA() {
 }
 
 function updateDashboard() {
+  try { updateRappelBadge(); } catch(e) {}
   let ca = 0;
   documents.filter(d=>d.type==='recu').forEach(d => {
     ca += parseFloat((d.verse||'0').toString().replace(/[^\d.]/g,'')) || 0;
@@ -4897,6 +4976,236 @@ async function convertirDonneesUSD() {
   }
   alert('✅ Conversion terminée :\n' + nd + ' documents, ' + nv + ' véhicules, ' + ne + ' dépenses.');
   location.reload();
+}
+
+// ══ ENCAISSEMENT DIRECT (sans passer par la modification) ══
+function parseMontant(x) { return parseFloat(String(x==null?'0':x).replace(/[^\d.]/g,'')) || 0; }
+function r2(x) { return Math.round(x*100)/100; }
+
+function docDue(doc) {
+  var total = parseMontant(doc.total);
+  var verse = parseMontant(doc.verse);
+  return { total: total, verse: verse, rest: total > 0 ? Math.max(0, r2(total - verse)) : 0 };
+}
+
+async function persistDoc(doc) {
+  try { localStorage.setItem('av_docs', JSON.stringify(documents)); } catch(e) {}
+  if (window._avFbOn && typeof fbPut === 'function') {
+    try {
+      var id = doc._id || String(doc.num || 'd').replace(/[^a-zA-Z0-9]/g,'-');
+      doc._id = id;
+      await fbPut('documents', id, doc);
+    } catch(e) { showToast('⚠️ Firebase: ' + e.message); }
+  }
+}
+
+var _encDoc = null;
+function ouvrirEncaisser(doc) {
+  var d = docDue(doc);
+  if (d.rest <= 0.005) { showToast('✅ Ce document est déjà soldé'); return; }
+  _encDoc = doc;
+  document.getElementById('enc-sub').textContent = (DOC_LABELS[doc.type]||'Document') + ' ' + (doc.num||'') + ' — ' + (doc.client||'');
+  document.getElementById('enc-total').textContent = fmt(d.total) + ' $';
+  document.getElementById('enc-verse').textContent = fmt(d.verse) + ' $';
+  document.getElementById('enc-reste').textContent = fmt(d.rest) + ' $';
+  document.getElementById('enc-montant').value = d.rest;
+  document.getElementById('enc-date').value = new Date().toISOString().slice(0,10);
+  majEncaisserApercu();
+  document.getElementById('enc-overlay').classList.add('open');
+}
+function fermerEncaisser() { document.getElementById('enc-overlay').classList.remove('open'); _encDoc = null; }
+function majEncaisserApercu() {
+  if (!_encDoc) return;
+  var d = docDue(_encDoc);
+  var m = parseFloat(document.getElementById('enc-montant').value) || 0;
+  var apres = r2(d.rest - m);
+  var el = document.getElementById('enc-apres');
+  if (m <= 0) { el.style.color = 'var(--gris)'; el.textContent = 'Saisissez un montant.'; }
+  else if (m > d.rest + 0.005) { el.style.color = 'var(--rouge)'; el.textContent = '⚠️ Le montant dépasse le reste à payer.'; }
+  else if (apres <= 0.005) { el.style.color = 'var(--vert)'; el.textContent = '✅ Le document sera entièrement soldé.'; }
+  else { el.style.color = '#b45f06'; el.textContent = '⚠️ Paiement partiel — il restera ' + fmt(apres) + ' $.'; }
+}
+async function confirmerEncaisser() {
+  var doc = _encDoc; if (!doc) return;
+  var d = docDue(doc);
+  var m = r2(parseFloat(document.getElementById('enc-montant').value) || 0);
+  if (m <= 0) { showToast('⚠️ Saisissez un montant'); return; }
+  if (m > d.rest + 0.005) { showToast('⚠️ Montant supérieur au reste à payer'); return; }
+  var verse = r2(d.verse + m);
+  var reste = Math.max(0, r2(d.total - verse));
+  doc.verse = verse;
+  doc.reste = fmt(reste) + ' $';
+  doc.paiementStatut = reste <= 0.005 ? 'complet' : 'partiel';
+  if (!doc.paiements) doc.paiements = [];
+  doc.paiements.push({ date: document.getElementById('enc-date').value, montant: m, mode: document.getElementById('enc-mode').value });
+  fermerEncaisser();
+  await persistDoc(doc);
+  showToast(reste <= 0.005 ? '✅ Paiement encaissé — document soldé' : '✅ ' + fmt(m) + ' $ encaissé — reste ' + fmt(reste) + ' $');
+  renderDocList();
+  updateDashboard();
+  if (document.getElementById('page-rappels').classList.contains('active')) renderRappels();
+}
+
+function extraPaiementDoc(doc) {
+  if ((doc.type !== 'proforma' && doc.type !== 'douane') || !parseMontant(doc.verse)) return '';
+  var d = docDue(doc);
+  return '<div class="doc-pdf-total-row"><span>Montant versé</span><span style="color:#1E7E5A;font-weight:700">' + fmt(d.verse) + ' $</span></div>'
+       + '<div class="doc-pdf-total-row"><span>Reste à payer</span><span style="color:' + (d.rest <= 0.005 ? '#1E7E5A' : '#C0392B') + ';font-weight:700">' + fmt(d.rest) + ' $</span></div>';
+}
+
+// ══ RAPPELS CLIENTS (évolution de l'embarquement + solde dû) ══
+var STATUT_CMD_LBL = {
+  en_cours:   '⏳ Commande confirmée, en préparation',
+  en_transit: '🚢 En transit vers Conakry',
+  arrive:     '✅ Arrivé à Conakry — prêt pour la livraison'
+};
+
+function rappelClients() {
+  var map = {};
+  documents.forEach(function(d) {
+    if (!d.client) return;
+    var k = d.client.trim().toLowerCase();
+    if (!map[k]) map[k] = { nom: d.client.trim(), tel: '', docs: [] };
+    if (d.tel) map[k].tel = d.tel;
+    map[k].docs.push(d);
+  });
+  var list = Object.keys(map).map(function(k) {
+    var c = map[k];
+    var du = 0, lignes = [], vehicules = [], dernier = null, transit = [];
+    c.docs.forEach(function(d) {
+      if (d.dernierRappel && (!dernier || d.dernierRappel > dernier)) dernier = d.dernierRappel;
+      if (d.type === 'proforma' && d.statutCmd) vehicules.push(d);
+      if (d.type === 'transit' && (d.conteneur || d.navire)) transit.push(d);
+      var r = docDue(d).rest;
+      if (r <= 0.005) return;
+      if (d.type === 'proforma') {
+        var des = d.items && d.items[0] ? d.items[0].designation : '';
+        var couvert = documents.some(function(x) {
+          return x.type === 'recu' && x.client && x.client.trim().toLowerCase() === k &&
+            (x.refPf === d.num || (des && x.items && x.items[0] && x.items[0].designation === des));
+        });
+        if (couvert) return;
+      }
+      du += r;
+      lignes.push({ doc: d, rest: r });
+    });
+    c.du = r2(du); c.lignes = lignes; c.vehicules = vehicules; c.transit = transit; c.dernier = dernier;
+    c.jours = dernier ? Math.floor((Date.now() - new Date(dernier).getTime()) / 86400000) : null;
+    c.aRelancer = du > 0.005 && (c.jours === null || c.jours >= 7);
+    return c;
+  });
+  return list;
+}
+
+function updateRappelBadge() {
+  var l = rappelClients();
+  var n = l.filter(function(c){ return c.aRelancer; }).length;
+  var tot = l.reduce(function(s,c){ return s + c.du; }, 0);
+  var b = document.getElementById('rappel-badge');
+  if (b) { b.textContent = n; b.style.display = n ? '' : 'none'; }
+  var ban = document.getElementById('rappel-banner');
+  if (ban) {
+    if (n) { ban.style.display = ''; ban.textContent = '🔔 ' + n + ' client(s) à relancer — total dû : ' + fmt(tot) + ' $  (cliquer pour ouvrir les rappels)'; }
+    else ban.style.display = 'none';
+  }
+}
+
+function renderRappels() {
+  var q = (document.getElementById('rappel-search').value || '').toLowerCase();
+  var f = document.getElementById('rappel-filtre').value;
+  var all = rappelClients();
+  document.getElementById('rp-total-du').textContent = fmt(all.reduce(function(s,c){return s+c.du;},0)) + ' $';
+  document.getElementById('rp-nb-relance').textContent = all.filter(function(c){return c.aRelancer;}).length;
+  document.getElementById('rp-nb-transit').textContent = documents.filter(function(d){return d.statutCmd==='en_transit';}).length;
+
+  var list = all.filter(function(c) {
+    if (q && c.nom.toLowerCase().indexOf(q) === -1) return false;
+    if (f === 'du') return c.du > 0.005;
+    if (f === 'relance') return c.aRelancer;
+    if (f === 'transit') return c.vehicules.some(function(d){ return d.statutCmd === 'en_transit'; });
+    return true;
+  }).sort(function(a,b){ return b.du - a.du; });
+  window._rappelList = list;
+
+  var box = document.getElementById('rappels-list');
+  if (!list.length) { box.innerHTML = '<div style="text-align:center;padding:60px;color:var(--gris);">Aucun client à afficher.</div>'; return; }
+  box.innerHTML = list.map(function(c, i) {
+    var cls = c.du <= 0.005 ? 'ok' : (c.aRelancer ? 'urgent' : '');
+    var veh = c.vehicules.map(function(d, j) {
+      var des = d.items && d.items[0] ? d.items[0].designation : 'Véhicule';
+      return '<div class="rp-veh"><span>🚗 ' + des + ' <span style="color:var(--gris);font-size:11px">(' + (d.num||'') + ')</span></span>'
+        + '<select onchange="changerStatutCmd(' + i + ',' + j + ',this.value)">'
+        + ['en_cours','en_transit','arrive'].map(function(k){ return '<option value="' + k + '"' + (d.statutCmd===k?' selected':'') + '>' + STATUT_CMD_LBL[k] + '</option>'; }).join('')
+        + '</select></div>';
+    }).join('');
+    var tr = c.transit.map(function(d){ return '<div style="font-size:11px;color:var(--gris);padding:3px 0;">🚢 ' + (d.conteneur ? 'Conteneur ' + d.conteneur : '') + (d.navire ? ' — Navire ' + d.navire : '') + (d.compagnie ? ' (' + d.compagnie + ')' : '') + '</div>'; }).join('');
+    var det = c.lignes.map(function(l){ return '<div style="font-size:12px;color:var(--gris);">• ' + (DOC_LABELS[l.doc.type]||'') + ' ' + (l.doc.num||'') + ' : reste ' + fmt(l.rest) + ' $</div>'; }).join('');
+    var last = c.dernier ? 'Dernier rappel : ' + (c.jours === 0 ? "aujourd'hui" : 'il y a ' + c.jours + ' j') : 'Jamais relancé';
+    return '<div class="rp-card ' + cls + '">'
+      + '<div class="rp-head"><div><div class="rp-nom">👤 ' + c.nom + '</div><div class="rp-tel">📞 ' + (c.tel || 'Téléphone non renseigné') + '</div></div>'
+      + '<div><div class="rp-du ' + (c.du <= 0.005 ? 'zero' : '') + '">' + (c.du <= 0.005 ? '✅ Soldé' : fmt(c.du) + ' $') + '</div><div style="font-size:11px;color:var(--gris);text-align:right">' + (c.du > 0.005 ? 'solde dû' : '') + '</div></div></div>'
+      + veh + tr + det
+      + '<div class="rp-actions">'
+      + '<button class="btn btn-sm" style="background:#25D366;color:#fff;font-weight:700" onclick="envoyerRappel(' + i + ')">📲 Envoyer le rappel WhatsApp</button>'
+      + '<button class="btn btn-outline btn-sm" onclick="copierRappel(' + i + ')">📋 Copier le message</button>'
+      + '<span class="rp-last">' + last + '</span></div></div>';
+  }).join('');
+}
+
+function messageRappel(c) {
+  var m = 'Bonjour ' + c.nom + ',\n\n*AFRICA VISION MULTISERVICES* vous informe de l\'évolution de votre commande :\n';
+  if (c.vehicules.length) {
+    c.vehicules.forEach(function(d) {
+      var des = d.items && d.items[0] ? d.items[0].designation : 'Véhicule';
+      m += '\n🚗 *' + des + '*\n' + (STATUT_CMD_LBL[d.statutCmd] || '') + '\n';
+    });
+  }
+  c.transit.forEach(function(d) {
+    m += '\n🚢 ' + (d.conteneur ? 'Conteneur ' + d.conteneur : '') + (d.navire ? ' — Navire ' + d.navire : '') + '\n';
+  });
+  if (c.du > 0.005) {
+    m += '\n━━━━━━━━━━━━━━━━━━\n💰 *Solde restant dû : ' + fmt(c.du) + ' $*\n';
+    c.lignes.forEach(function(l) { m += '• ' + (DOC_LABELS[l.doc.type]||'') + ' ' + (l.doc.num||'') + ' : ' + fmt(l.rest) + ' $\n'; });
+    m += '\nNous vous prions de bien vouloir régulariser ce solde dans les meilleurs délais. Merci de votre confiance.\n';
+  } else {
+    m += '\n✅ Votre compte est à jour. Merci de votre confiance.\n';
+  }
+  m += '\n📞 +224 625 81 36 46\n📍 Madina – Sonfonia, Conakry\n🌐 africavisioncargo.com';
+  return m;
+}
+
+async function marquerRappel(c) {
+  var now = new Date().toISOString();
+  c.docs.forEach(function(d){ d.dernierRappel = now; });
+  try { localStorage.setItem('av_docs', JSON.stringify(documents)); } catch(e) {}
+  if (window._avFbOn && typeof window._avSaveDocs === 'function') { try { await window._avSaveDocs(); } catch(e) {} }
+  renderRappels(); updateRappelBadge();
+}
+
+function envoyerRappel(i) {
+  var c = window._rappelList[i]; if (!c) return;
+  var phone = (c.tel || '').replace(/[\s\-\+\(\)]/g, '');
+  if (!phone) { showToast('⚠️ Aucun téléphone pour ce client'); return; }
+  if (phone.indexOf('224') !== 0) phone = '224' + phone;
+  window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(messageRappel(c)), '_blank');
+  marquerRappel(c);
+}
+
+function copierRappel(i) {
+  var c = window._rappelList[i]; if (!c) return;
+  var t = messageRappel(c);
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(function(){ showToast('📋 Message copié'); });
+  else { prompt('Copiez le message :', t); }
+  marquerRappel(c);
+}
+
+async function changerStatutCmd(i, j, val) {
+  var c = window._rappelList[i]; if (!c) return;
+  var d = c.vehicules[j]; if (!d) return;
+  d.statutCmd = val;
+  await persistDoc(d);
+  showToast('✅ Statut mis à jour');
+  renderRappels(); updateDashboard();
 }
 
 // Hamburger visible on ALL screen sizes
